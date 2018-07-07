@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2035
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitchIntegrationPlugin", "BeatSaberTwitchIntegration\TwitchIntegrationPlugin.csproj", "{D7013E3F-8E45-4B06-ACBD-FD801B88DEAB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		BSDebug|Any CPU = BSDebug|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D7013E3F-8E45-4B06-ACBD-FD801B88DEAB}.BSDebug|Any CPU.ActiveCfg = BSDebug|Any CPU
+		{D7013E3F-8E45-4B06-ACBD-FD801B88DEAB}.BSDebug|Any CPU.Build.0 = BSDebug|Any CPU
+		{D7013E3F-8E45-4B06-ACBD-FD801B88DEAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7013E3F-8E45-4B06-ACBD-FD801B88DEAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7013E3F-8E45-4B06-ACBD-FD801B88DEAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7013E3F-8E45-4B06-ACBD-FD801B88DEAB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {59AAE5FF-DB58-465E-9D13-37D0A7438C5C}
+	EndGlobalSection
+EndGlobal
