@@ -89,11 +89,13 @@ namespace TwitchIntegrationPlugin
                 {
                     _doesDirExist = (doesSongExist(song)) ? true : false;
 
+                    Console.WriteLine("CLICKED");
                     if (_doesDirExist) {
                         Console.WriteLine("Starting to play song");
                         try
                         {
                             CustomSongInfo _songInfo = SongLoader.CustomSongInfos.Find(x => x.songName == song._songName && x.authorName == song._authName);
+                            SongLoader.Instance.LoadIfNotLoaded(SongLoader.CustomLevelStaticDatas.First(x => song._songName == x.songName && song._authName == x.authorName));
                             _mainGameSceneSetupData.SetData(_songInfo.levelId, getHighestDiff(_songInfo), null, null, 0f, GameplayOptions.defaultOptions, GameplayMode.SoloStandard, null);
                             _mainGameSceneSetupData.TransitionToScene(0.7f);
                         }
@@ -178,12 +180,22 @@ namespace TwitchIntegrationPlugin
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(e);
                     yield break;
                 }
 
                 FastZip zip = new FastZip();
                 zip.ExtractZip(zipPath, customSongsPath, null);
-                SongLoader.Instance.RefreshSongs();
+                var subDir = Directory.GetDirectories(customSongsPath);
+                try
+                {
+                    SongLoader.Instance.Database.AddSong(subDir[0], true);
+                    SongLoader.Instance.RefreshSongs();
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e);
+                }
                 File.Delete(zipPath);
 
                 _nextButton.interactable = true;
@@ -208,13 +220,21 @@ namespace TwitchIntegrationPlugin
             return highest;
         }
 
-        public bool doesSongExist(QueuedSong song)
+        public bool doesSongExist(QueuedSong song) 
         {
-            if (SongLoader.CustomLevelStaticDatas.First(x => song._songName == x.songName && song._authName == x.authorName) != null)
+            try
             {
-                return true;
+                if (SongLoader.CustomLevelStaticDatas.First(x => song._songName == x.songName && song._authName == x.authorName) != null)
+                {
+                    return true;
+                }
+                return false;
+            } 
+            catch(Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
             }
-            return false;
         }
     }
 }
