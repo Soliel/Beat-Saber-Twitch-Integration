@@ -12,12 +12,13 @@ namespace TwitchIntegrationPlugin
 {
     class BeatBot
     {
-        //TODO: Index downloaded songs to ease on searching.
         private Config config;
         private Thread botThread;
         private bool retry = false;
         private bool exit = false;
 
+        EventWaitHandle wait = new AutoResetEvent(false);
+       
 
         public BeatBot()
         {
@@ -34,7 +35,7 @@ namespace TwitchIntegrationPlugin
         {
             retry = false;
             exit = true;
-
+            botThread.Abort();
             botThread.Join();
         }
 
@@ -66,7 +67,7 @@ namespace TwitchIntegrationPlugin
                         while (!exit)
                         {
                             string inputLine;
-                            while ((inputLine = reader.ReadLine()) != null)
+                            while ((inputLine = reader.ReadLine()) != null || !exit )
                             {
                                 string[] splitInput = inputLine.Split(' ');
                                 //Console.WriteLine(inputLine);
@@ -83,7 +84,9 @@ namespace TwitchIntegrationPlugin
                                     if (splitInput[2].StartsWith("!bsr ")) {
                                         var queryString = splitInput[2].Remove(0, 5);
                                         Console.WriteLine("Command Recieved with query: " + queryString);
-                                        OnSongRequest(reader, writer, queryString);
+                                        UnityWebRequest www = UnityWebRequest.Get(String.Format("https://beatsaver.com/search.php?q={0}", queryString));
+                                        www.timeout = 2;
+                                        www.SendWebRequest().completed += (e) => OnSongRequest(www, writer, queryString);
                                     }
                                 }
                             }
@@ -122,14 +125,8 @@ namespace TwitchIntegrationPlugin
             return new Config(channel, token);
         }
 
-        public IEnumerable OnSongRequest(StreamReader reader, StreamWriter writer, String queryString)
+        public void OnSongRequest(UnityWebRequest www, StreamWriter writer, String queryString)
         {
-            Console.WriteLine("command entered.");
-
-            UnityWebRequest www = UnityWebRequest.Get(String.Format("https://beatsaver.com/search.php?q={0}", queryString));
-            www.timeout = 2;
-            yield return www.SendWebRequest();
-
             Console.WriteLine("Webrequest sent");
 
             if (www.isNetworkError || www.isHttpError)
