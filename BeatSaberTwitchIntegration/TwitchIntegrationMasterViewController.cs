@@ -1,5 +1,4 @@
-﻿extern alias BDownloader;
-using System;
+﻿using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,7 +10,7 @@ using SongLoaderPlugin;
 using System.Collections.Generic;
 using UnityEngine.Networking;
 using SimpleJSON;
-using BDownloader::ICSharpCode.SharpZipLib.Zip;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace TwitchIntegrationPlugin
 {
@@ -26,7 +25,7 @@ namespace TwitchIntegrationPlugin
         MainGameSceneSetupData _mainGameSceneSetupData;
         SongLoader loader = SongLoader.Instance;
         String customSongsPath;
-        bool _doesDirExist;
+        bool _doesSongExist;
 
         QueuedSong song;
 
@@ -73,24 +72,12 @@ namespace TwitchIntegrationPlugin
                 (_nextButton.transform as RectTransform).sizeDelta = new Vector2(25f, 10f);
                 ui.SetButtonText(ref _nextButton, (Directory.Exists(customSongsPath)) ? "Play" : "Download");
 
-                /*if(_doesDirExist)
-                {
-                    try
-                    {
-
-                    }
-                    catch(Exception e)
-                    {
-                        Console.WriteLine("Error creating difficulty controller." + e);
-                    }
-                }*/
-
                 _nextButton.onClick.AddListener(delegate ()
                 {
-                    _doesDirExist = (doesSongExist(song)) ? true : false;
+                    _doesSongExist = (doesSongExist(song)) ? true : false;
 
                     Console.WriteLine("CLICKED");
-                    if (_doesDirExist) {
+                    if (_doesSongExist) {
                         Console.WriteLine("Starting to play song");
                         try
                         {
@@ -216,7 +203,6 @@ namespace TwitchIntegrationPlugin
                     highest = diff;
                 }
             }
-
             return highest;
         }
 
