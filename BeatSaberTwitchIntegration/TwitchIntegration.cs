@@ -48,10 +48,8 @@ namespace TwitchIntegrationPlugin
 
         IEnumerator WaitForResults()
         {
-            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<ResultsViewController>().Count() > 0; });
-
+            yield return new WaitUntil(() => { return Resources.FindObjectsOfTypeAll<ResultsViewController>().Count() > 0; });
             ResultsViewController results = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
-
 
             results.resultsViewControllerDidPressContinueButtonEvent += delegate (ResultsViewController viewController) {
 
@@ -69,10 +67,7 @@ namespace TwitchIntegrationPlugin
                 {
                     Console.WriteLine($"RESULTS EXCEPTION: {e}");
                 }
-
             };
         }
-        
-
     }
 }

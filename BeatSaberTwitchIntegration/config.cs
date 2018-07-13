@@ -9,11 +9,13 @@ namespace TwitchIntegrationPlugin
     {
         public string Channel { get; set; }
         public string Token { get; set; }
+        public string Username { get; set; }
 
-        public Config(string channel, string token)
+        public Config(string channel, string token, string username)
         {
             Channel = channel;
             Token = token;
+            Username = username;
         }
     }
 }
