@@ -1,13 +1,8 @@
-﻿using HMUI;
-using TMPro;
+﻿using TMPro;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUI;
 using Image = UnityEngine.UI.Image;
@@ -54,7 +49,6 @@ namespace TwitchIntegrationPlugin
                 _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
                 _mainMenuRectTransform = _buttonInstance.transform.parent as RectTransform;
                 _loadingIndicatorInstance = Resources.FindObjectsOfTypeAll<GameObject>().Where(x => x.name == "LoadingIndicator").First();
-
             }
             catch (Exception e)
             {
@@ -65,7 +59,8 @@ namespace TwitchIntegrationPlugin
             {
                 CreateTwitchModeButton();
                 CreateDebugButton();
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine(e);
             }

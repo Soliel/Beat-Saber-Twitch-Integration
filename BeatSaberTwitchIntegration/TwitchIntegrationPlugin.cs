@@ -1,15 +1,10 @@
 ﻿using IllusionPlugin;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using NLog;
 using UnityEngine.SceneManagement;
 
 namespace TwitchIntegrationPlugin
 {
-    /* TODO section
-     * TODO: Change BeatBot.cs to take advantage of Coroutines from MonoBehavior 
-     */ 
     public class TwitchIntegrationPlugin : IPlugin
     {
 
@@ -21,6 +16,16 @@ namespace TwitchIntegrationPlugin
         { 
             bot.Start();
             StaticData.TwitchMode = false;
+
+            var nlogconfig = new NLog.Config.LoggingConfiguration();
+
+            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = "TILog.txt" };
+            var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
+
+            nlogconfig.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
+            nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+
+            LogManager.Configuration = nlogconfig;
         }
 
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
