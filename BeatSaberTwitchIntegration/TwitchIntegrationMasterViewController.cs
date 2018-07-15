@@ -1,5 +1,4 @@
-﻿extern alias BDownloader;
-using System;
+﻿using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,10 +7,8 @@ using TMPro;
 using System.Collections;
 using System.IO;
 using SongLoaderPlugin;
-using System.Collections.Generic;
 using UnityEngine.Networking;
-using SimpleJSON;
-using BDownloader::ICSharpCode.SharpZipLib.Zip;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace TwitchIntegrationPlugin
 {
@@ -72,18 +69,6 @@ namespace TwitchIntegrationPlugin
                 (_nextButton.transform as RectTransform).anchoredPosition = new Vector2(-25f, 10f);
                 (_nextButton.transform as RectTransform).sizeDelta = new Vector2(25f, 10f);
                 ui.SetButtonText(ref _nextButton, (Directory.Exists(customSongsPath)) ? "Play" : "Download");
-
-                /*if(_doesDirExist)
-                {
-                    try
-                    {
-
-                    }
-                    catch(Exception e)
-                    {
-                        Console.WriteLine("Error creating difficulty controller." + e);
-                    }
-                }*/
 
                 _nextButton.onClick.AddListener(delegate ()
                 {

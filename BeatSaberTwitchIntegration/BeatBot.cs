@@ -13,7 +13,7 @@ namespace TwitchIntegrationPlugin
 {
     class BeatBot
     {
-        private const String BEATSAVER = "https://beatsaver.cyber-cortex.net/";
+        private const String BEATSAVER = "https://beatsaver.com";
         private Config config;
         private Thread botThread;
         private bool retry = false;
@@ -91,9 +91,7 @@ namespace TwitchIntegrationPlugin
                                     if (splitInput[2].StartsWith("!bsr ")) {
                                         var queryString = splitInput[2].Remove(0, 5);
                                         logger.Info("Command Recieved with query: " + queryString);
-                                        UnityWebRequest www = UnityWebRequest.Get(String.Format("https://beatsaver.com/search.php?q={0}", queryString));
-                                        www.timeout = 2;
-                                        www.SendWebRequest().completed += (e) => OnSongRequest(www, writer, queryString);
+                                        OnCommandRecieved(writer, queryString);
                                     }
                                 }
                             }
@@ -109,20 +107,105 @@ namespace TwitchIntegrationPlugin
             } while (retry);
         }
 
+        public void OnCommandRecieved(StreamWriter writer, string queryString)
+        {
+            /*if(queryString.StartsWith("help"))
+            {
+                //TODO: Implement
+            }
+            else if(queryString.StartsWith("showqueue"))
+            {
+                //TODO: Implement
+            }
+            else if(queryString.StartsWith("Rem last"))
+            {
+                //TODO: Implement
+            }
+            else if(queryString.StartsWith("Rem")) {
+                //TODO: Implement
+            }
+            else if(queryString.StartsWith("https"))
+            {
+                RequestSongById(writer, queryString);
+            }
+            else
+            {*/
+                RequestSongByText(writer, queryString);
+            //}
+        }
+
+        public void RequestSongByText(StreamWriter writer, String queryString)
+        {
+            UnityWebRequest www = new UnityWebRequest(String.Format("{0}/api/songs/search/all/{1}", BEATSAVER, queryString));
+            www.timeout = 2;
+            www.SendWebRequest().completed += (e) =>
+            {
+
+                logger.Debug("Webrequest sent.");
+
+                if (www.isNetworkError || www.isHttpError)
+                {
+                    writer.WriteLine("PRIVMSG #" + config.Channel + " :Error Searching for song.");
+                    writer.Flush();
+                }
+                else
+                {
+                    logger.Debug("Song request recieved. Parsing.");
+                    try
+                    {
+                        string parse = HttpUtility.HtmlDecode(www.downloadHandler.text);
+
+                        JSONNode node = JSON.Parse(parse);
+                        string songName = node["hits"]["hits"][0]["_source"]["songName"];
+                        string beatName = node["hits"]["hits"][0]["_source"]["beatname"];
+                        string authorName = node["hits"]["hits"][0]["_source"]["authorName"];
+
+                        StaticData.songQueue.Enqueue(new QueuedSong(songName,
+                            beatName,
+                            authorName,
+                            node["hits"]["hits"][0]["_source"]["beatsPerMinute"],
+                            node["hits"]["hits"][0]["_source"]["id"]));
+
+                        writer.WriteLine("PRIVMSG #" + config.Channel + " :Song Found: " + beatName + " adding to the queue.");
+                        writer.Flush();
+                    }
+                    catch
+                    {
+                        logger.Error("Parsing Song Data Failed.");
+                        writer.WriteLine("PRIVMSG #" + config.Channel + " :Error Searching for song.");
+                        writer.Flush();
+                    }
+                }
+            };
+        }
+
+        private void RequestSongById(StreamWriter writer, string queryString)
+        {
+            string id = queryString.Split('=')[1];
+
+            UnityWebRequest www = new UnityWebRequest(String.Format("{0}/api/{1}", BEATSAVER, id));
+            www.timeout = 2;
+            www.SendWebRequest().completed += (e) =>
+            {
+
+            };
+
+        }
+
         private Config ReadCredsFromConfig()
         {
             string channel;
             string token;
             string username;
 
-            if(!Directory.Exists("Plugins\\Config"))
+            if (!Directory.Exists("Plugins\\Config"))
             {
                 Directory.CreateDirectory("Plugins\\Config");
             }
-            
-            if(!File.Exists("Plugins\\Config\\TwitchIntegration.xml"))
+
+            if (!File.Exists("Plugins\\Config\\TwitchIntegration.xml"))
             {
-                using(XmlWriter writer = XmlWriter.Create("Plugins\\Config\\TwitchIntegration.xml"))
+                using (XmlWriter writer = XmlWriter.Create("Plugins\\Config\\TwitchIntegration.xml"))
                 {
                     writer.WriteStartDocument();
                     writer.WriteStartElement("Config");
@@ -151,45 +234,6 @@ namespace TwitchIntegrationPlugin
             {
                 logger.Error("Error loading xml file: " + e);
                 return null;
-            }
-        }
-
-        public void OnSongRequest(UnityWebRequest www, StreamWriter writer, String queryString)
-        {
-            logger.Debug("Webrequest sent.");
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                writer.WriteLine("PRIVMSG #" + config.Channel + " :Error Searching for song.");
-                writer.Flush();
-            }
-            else
-            {
-                logger.Debug("Song request recieved. Parsing.");
-                try
-                {
-                    string parse = www.downloadHandler.text;
-
-                    JSONNode node = JSON.Parse(parse);
-                    string songName = HttpUtility.HtmlDecode(node["hits"]["hits"][0]["_source"]["songName"]);
-                    string beatName = HttpUtility.HtmlDecode(node["hits"]["hits"][0]["_source"]["beatname"]);
-                    string authorName = HttpUtility.HtmlDecode(node["hits"]["hits"][0]["_source"]["authorName"]);
-
-                    StaticData.songQueue.Enqueue(new QueuedSong(songName,
-                        beatName,
-                        authorName,
-                        node["hits"]["hits"][0]["_source"]["beatsPerMinute"],
-                        node["hits"]["hits"][0]["_source"]["id"]));
-
-                    writer.WriteLine("PRIVMSG #" + config.Channel + " :Song Found: " + beatName + " adding to the queue.");
-                    writer.Flush();
-                }
-                catch
-                {
-                    logger.Error("Parsing Song Data Failed.");
-                    writer.WriteLine("PRIVMSG #" + config.Channel + " :Error Searching for song.");
-                    writer.Flush();
-                }
             }
         }
     }
