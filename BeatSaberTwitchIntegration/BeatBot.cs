@@ -160,7 +160,8 @@ namespace TwitchIntegrationPlugin
                             beatName,
                             authorName,
                             node["songs"][0]["bpm"],
-                            node["songs"][0]["authorName"]));
+                            node["songs"][0]["key"],
+                            node["songs"][0]["downloadUrl"]));
 
                         writer.WriteLine("PRIVMSG #" + config.Channel + " :Song Found: " + beatName + " adding to the queue.");
                         writer.Flush();

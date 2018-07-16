@@ -135,7 +135,7 @@ namespace TwitchIntegrationPlugin
             _nextButton.interactable = false;
             _skipButton.interactable = false;
 
-            UnityWebRequest www = UnityWebRequest.Get("https://beatsaver.com/dl.php?id=" + (songInfo._id));
+            UnityWebRequest www = UnityWebRequest.Get(songInfo._downloadUrl);
             www.timeout = 10;
             yield return www.SendWebRequest();
 
