@@ -12,7 +12,7 @@ namespace TwitchIntegrationPlugin
 {
     class BeatBot
     {
-        private const String BEATSAVER = "https://beatsaver.co
+        private const String BEATSAVER = "https://beatsaver.com";
         private Config config;
         private Thread botThread;
         private bool retry = false;
@@ -179,7 +179,7 @@ namespace TwitchIntegrationPlugin
         {
             string id = queryString.Split('=')[1];
 
-            UnityWebRequest www = new UnityWebRequest(String.Format("{0}/api/{1}", BEATSAVER, id));
+            UnityWebRequest www = UnityWebRequest.Get(String.Format("{0}/api/{1}", BEATSAVER, id));
             www.timeout = 2;
             www.SendWebRequest().completed += (e) =>
             {
