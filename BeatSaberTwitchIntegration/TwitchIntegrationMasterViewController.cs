@@ -81,7 +81,6 @@ namespace TwitchIntegrationPlugin
                         try
                         {
                             CustomSongInfo _songInfo = SongLoader.CustomSongInfos.Find(x => x.songName == song._songName && x.authorName == song._authName);
-                            SongLoader.Instance.LoadIfNotLoaded(SongLoader.CustomLevelStaticDatas.First(x => song._songName == x.songName && song._authName == x.authorName));
                             _mainGameSceneSetupData.SetData(_songInfo.levelId, getHighestDiff(_songInfo), null, null, 0f, GameplayOptions.defaultOptions, GameplayMode.SoloStandard, null);
                             _mainGameSceneSetupData.TransitionToScene(0.7f);
                         }
@@ -175,7 +174,6 @@ namespace TwitchIntegrationPlugin
                 var subDir = Directory.GetDirectories(customSongsPath);
                 try
                 {
-                    SongLoader.Instance.Database.AddSong(subDir[0], true);
                     SongLoader.Instance.RefreshSongs();
                 }
                 catch(Exception e)
