@@ -13,7 +13,7 @@ namespace TwitchIntegrationPlugin
 {
     class BeatBot
     {
-        private const String BEATSAVER = "https://beatsaver.com";
+        private const String BEATSAVER = "https://beatsaver.co
         private Config config;
         private Thread botThread;
         private bool retry = false;
@@ -189,7 +189,6 @@ namespace TwitchIntegrationPlugin
             {
 
             };
-
         }
 
         private Config ReadCredsFromConfig()
