@@ -5,7 +5,6 @@ namespace TwitchIntegrationPlugin
 {
     public class QueuedSong
     {
-
         public string   _songName { get; }
         public string   _beatName { get; }
         public string   _authName { get; }
