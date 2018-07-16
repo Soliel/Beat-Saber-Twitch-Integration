@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
-using MonoWebUtil;
 using UnityEngine.Networking;
 using SimpleJSON;
 using System.Xml;
@@ -19,7 +18,6 @@ namespace TwitchIntegrationPlugin
         private bool retry = false;
         private bool exit = false;
         private Logger logger;
-
         EventWaitHandle wait = new AutoResetEvent(false);
        
 
@@ -136,7 +134,7 @@ namespace TwitchIntegrationPlugin
 
         public void RequestSongByText(StreamWriter writer, String queryString)
         {
-            UnityWebRequest www = new UnityWebRequest(String.Format("{0}/api/songs/search/all/{1}", BEATSAVER, queryString));
+            UnityWebRequest www = UnityWebRequest.Get(String.Format("{0}/api/songs/search/all/{1}", BEATSAVER, queryString));
             www.timeout = 2;
             www.SendWebRequest().completed += (e) =>
             {
@@ -153,18 +151,16 @@ namespace TwitchIntegrationPlugin
                     logger.Debug("Song request recieved. Parsing.");
                     try
                     {
-                        string parse = HttpUtility.HtmlDecode(www.downloadHandler.text);
-
-                        JSONNode node = JSON.Parse(parse);
-                        string songName = node["hits"]["hits"][0]["_source"]["songName"];
-                        string beatName = node["hits"]["hits"][0]["_source"]["beatname"];
-                        string authorName = node["hits"]["hits"][0]["_source"]["authorName"];
+                        JSONNode node = JSON.Parse(www.downloadHandler.text);
+                        string songName = node["songs"][0]["songName"];
+                        string beatName = node["songs"][0]["name"];
+                        string authorName = node["songs"][0]["authorName"];
 
                         StaticData.songQueue.Enqueue(new QueuedSong(songName,
                             beatName,
                             authorName,
-                            node["hits"]["hits"][0]["_source"]["beatsPerMinute"],
-                            node["hits"]["hits"][0]["_source"]["id"]));
+                            node["songs"][0]["bpm"],
+                            node["songs"][0]["authorName"]));
 
                         writer.WriteLine("PRIVMSG #" + config.Channel + " :Song Found: " + beatName + " adding to the queue.");
                         writer.Flush();
