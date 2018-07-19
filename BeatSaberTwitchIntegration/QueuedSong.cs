@@ -12,9 +12,10 @@ namespace TwitchIntegrationPlugin
         public float    _bpm { get; }
         public string   _id { get; }
         public string  _downloadUrl { get; }
+        public string _requestedBy { get; }
         public string  _coverUrl { get; }
 
-        public QueuedSong(String songname, String beatname, String authname, String bpm, String id, String dlURL, String coverURL)
+        public QueuedSong(String songname, String beatname, String authname, String bpm, String id, String dlURL, String requestedBy, String coverURL)
         {
             _songName = songname;
             _beatName = beatname;
@@ -22,6 +23,7 @@ namespace TwitchIntegrationPlugin
             _id = id;
             _bpm = float.Parse(bpm, System.Globalization.CultureInfo.InvariantCulture);
             _downloadUrl = dlURL;
+            _requestedBy = requestedBy;
             _coverUrl = coverURL;
         }
     
