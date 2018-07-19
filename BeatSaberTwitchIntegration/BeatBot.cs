@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 using SimpleJSON;
 using System.Xml;
 using NLog;
-
+using System.Linq;
 
 namespace TwitchIntegrationPlugin
 {
@@ -89,6 +89,10 @@ namespace TwitchIntegrationPlugin
                                     if (splitInput[2].StartsWith("!bsr ")) {
                                         var queryString = splitInput[2].Remove(0, 5);
                                         logger.Info("Command Recieved with query: " + queryString);
+                                        if(queryString.StartsWith("https"))
+                                        {
+                                            queryString = splitInput[3];
+                                        }
                                         OnCommandRecieved(writer, queryString);
                                     }
                                 }
@@ -101,6 +105,10 @@ namespace TwitchIntegrationPlugin
                     logger.Debug(e.ToString());
                     Thread.Sleep(5000);
                     retry = ++retryCount <= 20;
+                    if(exit)
+                    {
+                        retry = false;
+                    }
                 }
             } while (retry);
         }
@@ -110,26 +118,30 @@ namespace TwitchIntegrationPlugin
             /*if(queryString.StartsWith("help"))
             {
                 //TODO: Implement
-            }
-            else if(queryString.StartsWith("showqueue"))
+            }*/
+            if(queryString.StartsWith("showqueue"))
             {
-                //TODO: Implement
+                SendQueueToChat(writer);
             }
-            else if(queryString.StartsWith("Rem last"))
+            /*else if(queryString.StartsWith("Rem last"))
             {
-                //TODO: Implement
+                //TODO: Implement remove last
             }
             else if(queryString.StartsWith("Rem")) {
-                //TODO: Implement
-            }
-            else if(queryString.StartsWith("https"))
+                //TODO: Implement remove
+            }*/
+            else if (queryString.StartsWith("//") || char.IsDigit(queryString, 0))
             {
+                if(!char.IsDigit(queryString, 0))
+                {
+                    queryString = queryString.Replace("//beatsaver.com/browse/detail/", string.Empty);
+                }
                 RequestSongById(writer, queryString);
             }
             else
-            {*/
+            {
                 RequestSongByText(writer, queryString);
-            //}
+            }
         }
 
         public void RequestSongByText(StreamWriter writer, String queryString)
@@ -161,7 +173,8 @@ namespace TwitchIntegrationPlugin
                             authorName,
                             node["songs"][0]["bpm"],
                             node["songs"][0]["key"],
-                            node["songs"][0]["downloadUrl"]));
+                            node["songs"][0]["downloadUrl"],
+                            node["songs"][0]["coverUrl"]));
 
                         writer.WriteLine("PRIVMSG #" + config.Channel + " :Song Found: " + beatName + " adding to the queue.");
                         writer.Flush();
@@ -178,14 +191,60 @@ namespace TwitchIntegrationPlugin
 
         private void RequestSongById(StreamWriter writer, string queryString)
         {
-            string id = queryString.Split('=')[1];
-
-            UnityWebRequest www = UnityWebRequest.Get(String.Format("{0}/api/{1}", BEATSAVER, id));
+            UnityWebRequest www = UnityWebRequest.Get(String.Format("{0}/api/songs/detail/{1}", BEATSAVER, queryString));
             www.timeout = 2;
             www.SendWebRequest().completed += (e) =>
             {
+                logger.Debug("Webrequest sent.");
 
+                if (www.isNetworkError || www.isHttpError)
+                {
+                    writer.WriteLine("PRIVMSG #" + config.Channel + " :Error Searching for song.");
+                    writer.Flush();
+                }
+                else
+                {
+                    logger.Debug("Song request recieved. Parsing.");
+                    try
+                    {
+                        JSONNode node = JSON.Parse(www.downloadHandler.text);
+                        string songName = node["song"]["songName"];
+                        string beatName = node["song"]["name"];
+                        string authorName = node["song"]["authorName"];
+
+                        StaticData.songQueue.Enqueue(new QueuedSong(songName,
+                            beatName,
+                            authorName,
+                            node["song"]["bpm"],
+                            node["song"]["key"],
+                            node["song"]["downloadUrl"],
+                            node["song"]["coverUrl"]));
+
+                        writer.WriteLine("PRIVMSG #" + config.Channel + " :Song Found: " + beatName + " adding to the queue.");
+                        writer.Flush();
+                    }
+                    catch
+                    {
+                        logger.Error("Parsing Song Data Failed.");
+                        writer.WriteLine("PRIVMSG #" + config.Channel + " :Error Searching for song.");
+                        writer.Flush();
+                    }
+                }
             };
+        }
+
+        public void SendQueueToChat(StreamWriter writer)
+        {
+            var tempList = StaticData.songQueue.ToArray();
+
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :Showing first 5 songs in queue.");
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :" + tempList.Length + " songs currently in queue");
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :1. " + tempList[0]._beatName);
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :2. " + tempList[1]._beatName);
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :3. " + tempList[2]._beatName);
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :4. " + tempList[3]._beatName);
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :5. " + tempList[4]._beatName);
+            writer.Flush();
         }
 
         private Config ReadCredsFromConfig()

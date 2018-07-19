@@ -156,6 +156,8 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="QueuedSong.cs" />
+    <Compile Include="RequestQueueController.cs" />
+    <Compile Include="RequestQueueTableCell.cs" />
     <Compile Include="StaticData.cs" />
     <Compile Include="TwitchIntegration.cs" />
     <Compile Include="TwitchIntegrationMasterViewController.cs" />
