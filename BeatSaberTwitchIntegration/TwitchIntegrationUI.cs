@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 using Image = UnityEngine.UI.Image;
+using HMUI;
+using System.Collections;
 
 namespace TwitchIntegrationPlugin
 {
@@ -23,6 +25,9 @@ namespace TwitchIntegrationPlugin
         public static List<Sprite> icons = new List<Sprite>();
 
         public TwitchIntegrationMasterViewController _twitchIntegrationViewController;
+
+        static public Dictionary<string, Sprite> _cachedSprites = new Dictionary<string, Sprite>();
+
 
         internal static void OnLoad()
         {
@@ -235,5 +240,26 @@ namespace TwitchIntegrationPlugin
             }
 
         }
+
+        static public IEnumerator LoadSprite(string spritePath, TableCell obj)
+        {
+            Texture2D tex;
+
+            if (_cachedSprites.ContainsKey(spritePath))
+            {
+                obj.GetComponentsInChildren<UnityEngine.UI.Image>()[2].sprite = _cachedSprites[spritePath];
+                yield break;
+            }
+
+            using (WWW www = new WWW(spritePath))
+            {
+                yield return www;
+                tex = www.texture;
+                var newSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.one * 0.5f, 100, 1);
+                _cachedSprites.Add(spritePath, newSprite);
+                obj.GetComponentsInChildren<UnityEngine.UI.Image>()[2].sprite = newSprite;
+            }
+        }
+
     }
 }

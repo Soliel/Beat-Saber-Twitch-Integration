@@ -5,6 +5,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Xml;
 using NLog;
+using System.Linq;
+
 
 namespace TwitchIntegrationPlugin
 {
@@ -141,6 +143,10 @@ namespace TwitchIntegrationPlugin
                     logger.Debug(e.ToString());
                     Thread.Sleep(5000);
                     retry = ++retryCount <= 20;
+                    if(exit)
+                    {
+                        retry = false;
+                    }
                 }
             } while (retry);
         }
@@ -379,7 +385,6 @@ namespace TwitchIntegrationPlugin
                             }
                         }
                     }
-
                     if (!limitReached)
                     {
                         if (!songExistsInQueue)
@@ -480,6 +485,20 @@ namespace TwitchIntegrationPlugin
                     }
                 }
             }
+        }
+
+        public void SendQueueToChat(StreamWriter writer)
+        {
+            var tempList = StaticData.songQueue.ToArray();
+
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :Showing first 5 songs in queue.");
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :" + tempList.Length + " songs currently in queue");
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :1. " + tempList[0]._beatName);
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :2. " + tempList[1]._beatName);
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :3. " + tempList[2]._beatName);
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :4. " + tempList[3]._beatName);
+            writer.WriteLine("PRIVMSG #" + config.Channel + " :5. " + tempList[4]._beatName);
+            writer.Flush();
         }
 
         private Config ReadCredsFromConfig()
