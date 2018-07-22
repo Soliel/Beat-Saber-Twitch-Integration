@@ -29,7 +29,7 @@ namespace TwitchIntegrationPlugin
         private bool isAcceptingRequests = true;
 
         private ArrayList banList = new ArrayList();
-        private ArrayList queueList = new ArrayList();
+
         private readonly ArrayList randomizedList = new ArrayList();
 
         private StreamWriter _writer;
@@ -83,7 +83,7 @@ namespace TwitchIntegrationPlugin
 
         public void Initiate()
         {
-            Console.WriteLine("Twitch bot starting...");
+            logger.Debug("Twitch bot starting...");
             var retryCount = 0;
 
             if (config == null) return;
@@ -141,11 +141,14 @@ namespace TwitchIntegrationPlugin
                 catch (Exception e)
                 {
                     logger.Debug(e.ToString());
-                    Thread.Sleep(5000);
                     retry = ++retryCount <= 20;
                     if(exit)
                     {
                         retry = false;
+                    }
+                    else
+                    {
+                        Thread.Sleep(5000);
                     }
                 }
             } while (retry);
@@ -174,13 +177,13 @@ namespace TwitchIntegrationPlugin
                             QueuedSong qs = APIConnection.GetSongFromBeatSaver(false, parsedCommand[1], requestedBy);
                             if (qs != null)
                             {
-                                if (queueList.Count >= 1)
+                                if (StaticData.queueList.Count >= 1)
                                 {
-                                    for (int i = 0; i < queueList.Count; i++)
+                                    for (int i = 0; i < StaticData.queueList.Count; i++)
                                     {
-                                        if (((QueuedSong)queueList[i])._songName.Contains(qs._songName))
+                                        if (((QueuedSong)StaticData.queueList[i])._songName.Contains(qs._songName))
                                         {
-                                            queueList.RemoveAt(i);
+                                            StaticData.queueList.RemoveAt(i);
                                             SendMessage("Removed \"" + qs._songName + "\" from the queue");
                                         }
                                     }
@@ -232,36 +235,37 @@ namespace TwitchIntegrationPlugin
                     {
                         Random randomizer = new Random();
 
-                        for (int i = 0; (i < config.RandomizeLimit) && (queueList.Count > 0); i++)
+                        for (int i = 0; (i < config.RandomizeLimit) && (StaticData.queueList.Count > 0); i++)
                         {
-                            int randomIndex = randomizer.Next(queueList.Count);
-                            QueuedSong randomSong = (QueuedSong)queueList[randomIndex];
+                            int randomIndex = randomizer.Next(StaticData.queueList.Count);
+                            QueuedSong randomSong = (QueuedSong)StaticData.queueList[randomIndex];
                             //System.out.println(" " + randomSong.getFirst());
                             randomizedList.Add(randomSong);
-                            queueList.RemoveAt(randomIndex);
+                            StaticData.queueList.RemoveAt(randomIndex);
                         }
 
-                        queueList.Clear();
-                        queueList.AddRange(randomizedList);
+                        StaticData.queueList.Clear();
+                        StaticData.queueList.AddRange(randomizedList);
                         randomizedList.Clear();
                         SendMessage(config.RandomizeLimit + " songs were randomly chosen from queue!");
-                        DisplaySongsInQueue(queueList, false);
+                        DisplaySongsInQueue(StaticData.queueList, false);
                     }
                     else if (command.StartsWith("!songinfo"))
                     {
-                        if (queueList.Count >= 1)
+                        if (StaticData.queueList.Count >= 1)
                         {
                             SendMessage("Song Currently Playing: " +
-                            "[ID: " + ((QueuedSong)queueList[0])._id + "], " +
-                            "[Song: " + ((QueuedSong)queueList[0])._songName + "], " +
-                            "[Download: " + ((QueuedSong)queueList[0])._downloadUrl + "]");
+                            "[ID: " + ((QueuedSong)StaticData.queueList[0])._id + "], " +
+                            "[Song: " + ((QueuedSong)StaticData.queueList[0])._songName + "], " +
+                            "[Download: " + ((QueuedSong)StaticData.queueList[0])._downloadUrl + "]");
                         }
                         else
                             SendMessage("No songs in the queue.");
                     }
                 }
             }
-            else if (config.ModOnly)
+
+            if (config.ModOnly)
             {
                 if (isModerator || isBroadcaster)
                 {
@@ -285,15 +289,37 @@ namespace TwitchIntegrationPlugin
         {
             if (command.StartsWith("!bsr"))
             {
-                AddRequestedSongToQueue(true, command.Remove(0, 5), requestedBy);
+                try
+                {
+                    var split = command.Remove(0, 5);
+                    if (char.IsDigit(split, 0))
+                    {
+                        AddRequestedSongToQueue(false, split, requestedBy);
+                    }
+                    else
+                    {
+                        AddRequestedSongToQueue(true, command.Remove(0, 5), requestedBy);
+                    }
+                }
+                catch(Exception e)
+                {
+                    logger.Error(e);
+                }
             }
             else if (command.StartsWith("!add"))
             {
-                AddRequestedSongToQueue(false, command.Remove(0, 5), requestedBy);
+                try
+                {
+                    AddRequestedSongToQueue(false, command.Remove(0, 5), requestedBy);
+                }
+                catch(Exception e)
+                {
+                    logger.Error(e);
+                }
             }
             else if (command.StartsWith("!queue"))
             {
-                DisplaySongsInQueue(queueList, false);
+                DisplaySongsInQueue(StaticData.queueList, false);
             }
             else if (command.StartsWith("!blist"))
             {
@@ -346,11 +372,11 @@ namespace TwitchIntegrationPlugin
             }
             else
             {
-                if (queueList.Count != 0)
+                if (StaticData.queueList.Count != 0)
                 {
                     int internalCounter = 0;
 
-                    foreach (QueuedSong q in queueList)
+                    foreach (QueuedSong q in StaticData.queueList)
                     {
                         if (q._songName.Contains(qs._songName))
                         {
@@ -359,7 +385,7 @@ namespace TwitchIntegrationPlugin
                         }
                     }
 
-                    foreach (QueuedSong q in queueList)
+                    foreach (QueuedSong q in StaticData.queueList)
                     {
                         if (q._requestedBy.Equals(requestedBy))
                         {
@@ -389,8 +415,8 @@ namespace TwitchIntegrationPlugin
                     {
                         if (!songExistsInQueue)
                         {
-                            queueList.Add(qs);
-                            StaticData.songQueue.Enqueue((QueuedSong)queueList[queueList.Count - 1]);
+                            StaticData.queueList.Add(qs);
+                            //StaticData.songQueue.Enqueue((QueuedSong)StaticData.queueList[StaticData.queueList.Count - 1]);
                             SendMessage(requestedBy + " added \"" + qs._songName + "\", uploaded by " + qs._authName + " to queue!");
                         }
                         else
@@ -403,8 +429,8 @@ namespace TwitchIntegrationPlugin
                 }
                 else
                 {
-                    queueList.Add(qs);
-                    StaticData.songQueue.Enqueue((QueuedSong)queueList[queueList.Count - 1]);
+                    StaticData.queueList.Add(qs);
+                    //StaticData.songQueue.Enqueue((QueuedSong)StaticData.queueList[StaticData.queueList.Count - 1]);
                     SendMessage(requestedBy + " added \"" + qs._songName + "\", uploaded by " + qs._authName + " to queue!");
                 }
             }
@@ -412,14 +438,14 @@ namespace TwitchIntegrationPlugin
 
         public void MoveToNextSongInQueue()
         {
-            if (queueList.Count >= 1)
+            if (StaticData.queueList.Count >= 1)
             {
-                String remSong = ((QueuedSong)queueList[0])._songName;
-                queueList.RemoveAt(0);
+                String remSong = ((QueuedSong)StaticData.queueList[0])._songName;
+                StaticData.queueList.RemoveAt(0);
 
-                if (queueList.Count != 0)
+                if (StaticData.queueList.Count != 0)
                 {
-                    SendMessage("Removed \"" + remSong + "\" from the queue, next song is \"" + ((QueuedSong)queueList[0])._songName + "\" requested by " + ((QueuedSong)queueList[0])._requestedBy);
+                    SendMessage("Removed \"" + remSong + "\" from the queue, next song is \"" + ((QueuedSong)StaticData.queueList[0])._songName + "\" requested by " + ((QueuedSong)StaticData.queueList[0])._requestedBy);
                 }
                 else
                     SendMessage("Queue is now empty");
@@ -430,9 +456,9 @@ namespace TwitchIntegrationPlugin
 
         public void RemoveAllSongsFromQueue()
         {
-            if (queueList.Count != 0)
+            if (StaticData.queueList.Count != 0)
             {
-                queueList.Clear();
+                StaticData.queueList.Clear();
                 SendMessage("Removed all songs from the BeatSaber queue");
             }
             else
@@ -451,7 +477,7 @@ namespace TwitchIntegrationPlugin
 
             if (queue.Count != 0)
             {
-                for (int i = 0; i < queueList.Count; i++)
+                for (int i = 0; i < StaticData.queueList.Count; i++)
                 {
                     if (i < queue.Count - 1)
                     {
@@ -487,7 +513,7 @@ namespace TwitchIntegrationPlugin
             }
         }
 
-        public void SendQueueToChat(StreamWriter writer)
+        /*public void SendQueueToChat(StreamWriter writer)
         {
             var tempList = StaticData.songQueue.ToArray();
 
@@ -499,7 +525,7 @@ namespace TwitchIntegrationPlugin
             writer.WriteLine("PRIVMSG #" + config.Channel + " :4. " + tempList[3]._beatName);
             writer.WriteLine("PRIVMSG #" + config.Channel + " :5. " + tempList[4]._beatName);
             writer.Flush();
-        }
+        }*/
 
         private Config ReadCredsFromConfig()
         {

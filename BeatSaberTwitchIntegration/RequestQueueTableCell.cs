@@ -8,7 +8,7 @@ using NLog;
 
 namespace TwitchIntegrationPlugin
 {
-    class RequestQueueTableCell : SongListTableCell
+    class RequestQueueTableCell : StandardLevelListTableCell
     {
         QueuedSong song;
 
@@ -19,8 +19,8 @@ namespace TwitchIntegrationPlugin
 
         public void Init(QueuedSong _song)
         {
-            SongListTableCell cell = GetComponent<SongListTableCell>();
-
+            CustomLevelListTableCell cell = GetComponent<CustomLevelListTableCell>();
+             
             foreach (FieldInfo info in cell.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
             {
                 info.SetValue(this, info.GetValue(cell));

@@ -35,14 +35,28 @@ namespace TwitchIntegrationPlugin
 
             JSONNode node = JSON.Parse(result);
 
-            string songName = node["song"]["songName"];
-            string beatName = node["song"]["name"];
-            string authorName = node["song"]["authorName"];
-            string bpm = node["song"]["bpm"];
-            string key = node["song"]["key"];
-            string downloadUrl = node["song"]["downloadUrl"];
-
-            return new QueuedSong(songName, beatName, authorName, bpm, key, downloadUrl, requestedBy);
+            if (isTextSearch)
+            {
+                string songName = node["songs"][0]["songName"];
+                string beatName = node["songs"][0]["name"];
+                string authorName = node["songs"][0]["authorName"];
+                string bpm = node["songs"][0]["bpm"];
+                string key = node["songs"][0]["key"];
+                string downloadUrl = node["songs"][0]["downloadUrl"];
+                string coverUrl = node["songs"][0]["coverUrl"];
+                return new QueuedSong(songName, beatName, authorName, bpm, key, downloadUrl, requestedBy, coverUrl);
+            } 
+            else
+            {
+                string songName = node["song"]["songName"];
+                string beatName = node["song"]["name"];
+                string authorName = node["song"]["authorName"];
+                string bpm = node["song"]["bpm"];
+                string key = node["song"]["key"];
+                string downloadUrl = node["song"]["downloadUrl"];
+                string coverUrl = node["song"]["coverUrl"];
+                return new QueuedSong(songName, beatName, authorName, bpm, key, downloadUrl, requestedBy, coverUrl);
+            }
         }
 
         private static bool MyRemoteCertificateValidationCallback(System.Object sender,

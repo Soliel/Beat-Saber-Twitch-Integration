@@ -28,6 +28,8 @@ namespace TwitchIntegrationPlugin
 
         static public Dictionary<string, Sprite> _cachedSprites = new Dictionary<string, Sprite>();
 
+        NLog.Logger logger;
+
 
         internal static void OnLoad()
         {
@@ -40,6 +42,7 @@ namespace TwitchIntegrationPlugin
 
         private void Awake()
         {
+            logger = NLog.LogManager.GetCurrentClassLogger();
             _instance = this;
             
             foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
@@ -57,7 +60,7 @@ namespace TwitchIntegrationPlugin
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                logger.Error(e);
             }
 
             try
@@ -67,7 +70,7 @@ namespace TwitchIntegrationPlugin
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                logger.Error(e);
             }
 
         }
@@ -82,8 +85,7 @@ namespace TwitchIntegrationPlugin
                 (_twitchModeButton.transform as RectTransform).sizeDelta = new Vector2(25f, 25f);
 
                 SetButtonText(ref _twitchModeButton, (StaticData.TwitchMode) ? "Twitch Mode: ON" : "Twitch Mode: OFF");
-
-                SetButtonIcon(ref _twitchModeButton, icons.First(x => (x.name == "SettingsIcon")));
+                //SetButtonIcon(ref _twitchModeButton, icons.First(x => (x.name == "SettingsIcon")));
 
                 _twitchModeButton.onClick.AddListener(delegate ()
                 {
@@ -100,7 +102,7 @@ namespace TwitchIntegrationPlugin
                 });
             } catch(Exception e)
             {
-                Console.WriteLine(e);
+                logger.Error(e);
             }
         }
 
@@ -115,7 +117,7 @@ namespace TwitchIntegrationPlugin
 
                 SetButtonText(ref _debugButton, "Twitch Debug");
 
-                SetButtonIcon(ref _debugButton, icons.First(x => (x.name == "SettingsIcon")));
+                //SetButtonIcon(ref _debugButton, icons.First(x => (x.name == "SettingsIcon")));
 
                 _debugButton.onClick.AddListener(delegate ()
                 {
@@ -129,13 +131,13 @@ namespace TwitchIntegrationPlugin
                     }
                     catch(Exception e)
                     {
-                        Console.WriteLine(e);
+                        logger.Error(e);
                     }
                 });
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                logger.Error(e);
             }
         }
 
