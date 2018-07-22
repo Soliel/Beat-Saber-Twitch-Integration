@@ -15,8 +15,8 @@ Lastly, add the channel to monitor. (This doesn't have to be the same as your tw
 | --- | --- |
 | !next | Jumps the queue ahead to the next song. |
 | !clearall | Clears the queue. |
-| !remove | Allows you to remove a song from the queue. Used like !remove <BeatsaverID> |
-| !block | Allows you to ban a song from ever getting requested again. Used like !block <BeatsaverID> |
+| !remove | Allows you to remove a song from the queue. Used like !remove \<BeatsaverID\> |
+| !block | Allows you to ban a song from ever getting requested again. Used like !block \<BeatsaverID\> |
 | !close | Allows you to close the queue and stop requests. |
 | !open | Allows you to open the queue and allow requests. |
 
