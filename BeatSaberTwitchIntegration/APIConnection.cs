@@ -33,6 +33,9 @@ namespace TwitchIntegrationPlugin
             result = responseStream.ReadToEnd();
             webresponse.Close();
 
+            if (result == "{\"songs\":[],\"total\":0}")
+                return null;
+
             JSONNode node = JSON.Parse(result);
 
             if (isTextSearch)
@@ -42,9 +45,10 @@ namespace TwitchIntegrationPlugin
                 string authorName = node["songs"][0]["authorName"];
                 string bpm = node["songs"][0]["bpm"];
                 string key = node["songs"][0]["key"];
+                string songSubName = node["songs"][0]["songSubName"];
                 string downloadUrl = node["songs"][0]["downloadUrl"];
                 string coverUrl = node["songs"][0]["coverUrl"];
-                return new QueuedSong(songName, beatName, authorName, bpm, key, downloadUrl, requestedBy, coverUrl);
+                return new QueuedSong(songName, beatName, authorName, bpm, key, songSubName, downloadUrl, requestedBy, coverUrl);
             } 
             else
             {
@@ -53,9 +57,10 @@ namespace TwitchIntegrationPlugin
                 string authorName = node["song"]["authorName"];
                 string bpm = node["song"]["bpm"];
                 string key = node["song"]["key"];
+                string songSubName = node["song"]["songSubName"];
                 string downloadUrl = node["song"]["downloadUrl"];
                 string coverUrl = node["song"]["coverUrl"];
-                return new QueuedSong(songName, beatName, authorName, bpm, key, downloadUrl, requestedBy, coverUrl);
+                return new QueuedSong(songName, beatName, authorName, bpm, key, songSubName, downloadUrl, requestedBy, coverUrl);
             }
         }
 

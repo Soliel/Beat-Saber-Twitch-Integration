@@ -344,6 +344,12 @@ namespace TwitchIntegrationPlugin
             }
 
             QueuedSong qs = APIConnection.GetSongFromBeatSaver(isTextSearch, queryString, requestedBy);
+            if(qs == null)
+            {
+                SendMessage("Invalid request");
+                return;
+            }
+
             bool songExistsInQueue = false;
             bool limitReached = false;
 

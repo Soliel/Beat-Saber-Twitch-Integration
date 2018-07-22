@@ -94,27 +94,39 @@ namespace TwitchIntegrationPlugin
 
                     logger.Debug("CLICKED");
                     if (_doesSongExist) {
-                        CustomLevel _songInfo = SongLoader.CustomLevels.Find(x => x.songName == song._songName && x.songAuthorName == song._authName);
-                        SongLoader.Instance.LoadAudioClipForLevel(_songInfo, (CustomLevel level) =>
+                        try
                         {
-                            logger.Debug("Starting to play song");
-                            try
+                            CustomLevel _songInfo = SongLoader.CustomLevels.Find(x => x.songName == song._songName &&
+                                x.songAuthorName == song._authName &&
+                                x.beatsPerMinute == song._bpm &&
+                                x.songSubName == song._songSubName);
+
+                            SongLoader.Instance.LoadAudioClipForLevel(_songInfo, (CustomLevel level) =>
                             {
-                                StaticData.queueList.RemoveAt(0);
-                                StaticData.didStartFromQueue = true;
-                                _menuSceneSetupData.StartLevel(getHighestDiff(_songInfo), GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
-                            }
-                            catch (Exception e)
-                            {
-                                StaticData.didStartFromQueue = false;
-                                logger.Error(e);
-                            }
-                        });
+                                logger.Debug("Starting to play song");
+                                try
+                                {
+                                    StaticData.queueList.RemoveAt(0);
+                                    StaticData.didStartFromQueue = true;
+
+                                    _menuSceneSetupData.StartLevel(getHighestDiff(_songInfo), GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
+                                }
+                                catch (Exception e)
+                                {
+                                    StaticData.didStartFromQueue = false;
+                                    logger.Error(e);
+                                }
+                            });
+                        }
+                        catch(Exception ex)
+                        {
+                            logger.Error(ex);
+                        }
                     }
                     else
                     {
                         logger.Debug("Starting Download");
-                        DownloadSongCoroutine(song);
+                        StartCoroutine(DownloadSongCoroutine(song));
                     }
                 });
             }
@@ -160,7 +172,7 @@ namespace TwitchIntegrationPlugin
             _menuSceneSetupData.TransitionToScene((levelCompletionResults == null) ? 0.35f : 1.3f);
         }*/
 
-        public void DownloadSongCoroutine(QueuedSong songInfo)
+        public IEnumerator DownloadSongCoroutine(QueuedSong songInfo)
         {
 
             ui.SetButtonText(ref _nextButton, "Downloading...");
@@ -169,12 +181,29 @@ namespace TwitchIntegrationPlugin
 
             logger.Debug("Web Request sent to: " + songInfo._downloadUrl);
             UnityWebRequest www = UnityWebRequest.Get(songInfo._downloadUrl);
-            www.timeout = 2;
-            www.SendWebRequest().completed += (AsyncOperation asyncOp) => {
 
-                if (www.isNetworkError || www.isHttpError || www.error != null)
+            bool timeout = false;
+            float time = 0f;
+
+            UnityWebRequestAsyncOperation asyncRequest = www.SendWebRequest();
+
+            while (!asyncRequest.isDone || asyncRequest.progress < 1f)
+            {
+                yield return null;
+
+                time += Time.deltaTime;
+
+                if (time >= 15f && asyncRequest.progress == 0f)
                 {
-                    logger.Error("error connecting to download: " + www.error);
+                    www.Abort();
+                    timeout = true;
+                }
+
+                if (www.isNetworkError || www.isHttpError || timeout)
+                {
+                    logger.Error("error connecting to download: " + ((timeout) ? "Connection timed out" : www.error ));
+                    _skipButton.interactable = true;
+                    _nextButton.interactable = true;
                 }
                 else
                 {
@@ -201,6 +230,8 @@ namespace TwitchIntegrationPlugin
                     catch (Exception e)
                     {
                         logger.Error(e);
+                        _nextButton.interactable = true;
+                        _skipButton.interactable = true;
                     }
 
                     FastZip zip = new FastZip();
@@ -209,6 +240,7 @@ namespace TwitchIntegrationPlugin
                     try
                     {
                         SongLoader.Instance.RefreshSongs();
+                        SongLoader.SongsLoadedEvent += (SongLoader, list) => { _nextButton.interactable = true; };
                     }
                     catch (Exception e)
                     {
@@ -216,11 +248,10 @@ namespace TwitchIntegrationPlugin
                     }
                     File.Delete(zipPath);
 
-                    _nextButton.interactable = true;
                     _skipButton.interactable = true;
                     ui.SetButtonText(ref _nextButton, "Play");
                 }
-            };
+            }
         }
 
         public IStandardLevelDifficultyBeatmap getHighestDiff(CustomLevel song)
@@ -245,7 +276,10 @@ namespace TwitchIntegrationPlugin
         {
             try
             {
-                if (SongLoader.CustomLevels.First(x => x.songName == song._songName && x.songAuthorName == song._authName) != null)
+                if (SongLoader.CustomLevels.FirstOrDefault(x => x.songName == song._songName && 
+                    x.songAuthorName == song._authName && 
+                    x.beatsPerMinute == song._bpm && 
+                    x.songSubName == song._songSubName) != null)
                 {
                     return true;
                 }
