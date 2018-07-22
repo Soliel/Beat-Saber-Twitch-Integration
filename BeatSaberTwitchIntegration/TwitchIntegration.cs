@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using NLog;
 using VRUI;
 
 namespace TwitchIntegrationPlugin
@@ -11,11 +12,13 @@ namespace TwitchIntegrationPlugin
     {
         TwitchIntegrationUI ui;
         public static TwitchIntegration _instance;
+        TwitchIntegrationMasterViewController _twitchIntegrationMasterViewController;
         static int _loadedLevel;
+        NLog.Logger logger;
 
         public static void OnLoad(int level)
         {
-            Console.WriteLine("Level jacker loaded.");
+            //Console.WriteLine("Level jacker loaded.");
             _loadedLevel = level;
 
             if(_instance == null)
@@ -31,11 +34,24 @@ namespace TwitchIntegrationPlugin
 
         public void OnLevelChange()
         {
-            Console.WriteLine("Level Changed was called: current level is " + _loadedLevel);
-
-            if (_loadedLevel <= 1 && StaticData.TwitchMode && StaticData.songQueue.Count > 0)
+            //Console.WriteLine("Level Changed was called: current level is " + _loadedLevel);
+            var _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupData>().First();
+            if (_loadedLevel <= 1)
             {
-                StartCoroutine(WaitForResults());
+                var flag = StaticData.didStartFromQueue;
+                StaticData.didStartFromQueue = false;
+
+                if (StaticData.TwitchMode && StaticData.queueList.Count > 0)
+                {
+                    if(flag)
+                    {
+                        StartCoroutine(WaitForMenu());
+                    }
+                    else
+                    {
+                        StartCoroutine(WaitForResults());
+                    }
+                }
             }
         }
 
@@ -44,30 +60,65 @@ namespace TwitchIntegrationPlugin
             _instance = this;
             DontDestroyOnLoad(this);
             ui = TwitchIntegrationUI._instance;
+            logger = LogManager.GetCurrentClassLogger();
         }
 
+        IEnumerator WaitForMenu()
+        {
+            yield return new WaitUntil(() => { return Resources.FindObjectsOfTypeAll<SoloModeSelectionViewController>().Count() > 0; });
+            
+            try
+            {
+                TwitchIntegrationMasterViewController queue = ui.CreateViewController<TwitchIntegrationMasterViewController>("Twitch Panel");
+                FindObjectOfType<SoloModeSelectionViewController>().DismissModalViewController(null, true);
+                FindObjectOfType<MainMenuViewController>().PresentModalViewController(queue, null, true);
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Failed to find MainMenuViewController: " + ex);
+            }
+        }
+
+        
         IEnumerator WaitForResults()
         {
+            logger.Debug("Waiting for contoller to init.");
             yield return new WaitUntil(() => { return Resources.FindObjectsOfTypeAll<ResultsViewController>().Count() > 0; });
             ResultsViewController results = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
 
-            results.resultsViewControllerDidPressContinueButtonEvent += delegate (ResultsViewController viewController) {
+            results.continueButtonPressedEvent += delegate (ResultsViewController viewController) {
 
                 try
                 {
+                    logger.Debug("Results!");
                     TwitchIntegrationMasterViewController queue = ui.CreateViewController<TwitchIntegrationMasterViewController>("twitch panel");
-
                     viewController.DismissModalViewController(null, true);
-                    FindObjectOfType<SongSelectionMasterViewController>().DismissModalViewController(null, true);
-                    FindObjectOfType<SoloModeSelectionViewController>().DismissModalViewController(null, true);
 
+                    FindObjectOfType<StandardLevelListViewController>().DismissModalViewController(null, true);
+                    FindObjectOfType<StandardLevelDifficultyViewController>().DismissModalViewController(null, true);
+                    FindObjectOfType<StandardLevelDetailViewController>().DismissModalViewController(null, true);
+                    FindObjectOfType<SoloModeSelectionViewController>().DismissModalViewController(null, true);
                     FindObjectOfType<MainMenuViewController>().PresentModalViewController(queue, null, true);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"RESULTS EXCEPTION: {e}");
+                    logger.Error($"RESULTS EXCEPTION: {e}");
                 }
             };
         }
+
+        //Recursive function to get all children of a view controller. I don't use it now, but it may be useful so leaving it in as a comment.
+        /*public List<VRUIViewController> getAllChildren(VRUIViewController viewController)
+        {
+            Console.WriteLine("GetAllChildren Iteration.");
+            if(viewController.childViewController == null)
+            {
+                return new List<VRUIViewController>();
+            }
+            var child = viewController.childViewController;
+            return (List<VRUIViewController>)new List<VRUIViewController>() { viewController }.Union(getAllChildren(viewController.childViewController));
+        }*/
+
+
     }
 }

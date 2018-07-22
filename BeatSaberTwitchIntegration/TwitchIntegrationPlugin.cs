@@ -2,6 +2,8 @@
 using System;
 using NLog;
 using UnityEngine.SceneManagement;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace TwitchIntegrationPlugin
 {
@@ -9,8 +11,9 @@ namespace TwitchIntegrationPlugin
     {
 
         public string Name => "Beat Saber Twitch Integration";
-        public string Version => "a1.0";
+        public string Version => "v1.1_bs-0.11.1";
         BeatBot bot = new BeatBot();
+        private NLog.Logger logger; 
 
         public void OnApplicationStart()
         { 
@@ -23,9 +26,9 @@ namespace TwitchIntegrationPlugin
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
 
             nlogconfig.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
-            nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
-
+            nlogconfig.AddRule(LogLevel.Info, LogLevel.Fatal, logfile);
             LogManager.Configuration = nlogconfig;
+            logger = LogManager.GetCurrentClassLogger();
         }
 
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
@@ -43,7 +46,6 @@ namespace TwitchIntegrationPlugin
 
         public void OnLevelWasLoaded(int level)
         {
-            Console.WriteLine("Loading scene " + level);
             if (level == 1)
             {
                 TwitchIntegrationUI.OnLoad();
@@ -53,6 +55,8 @@ namespace TwitchIntegrationPlugin
             {
                 TwitchIntegration.OnLoad(level);
             }
+
+            logger.Debug(SceneManager.GetActiveScene().name);
         }
 
         public void OnLevelWasInitialized(int level)

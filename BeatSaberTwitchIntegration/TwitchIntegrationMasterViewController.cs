@@ -8,12 +8,13 @@ using System.Collections;
 using System.IO;
 using SongLoaderPlugin;
 using UnityEngine.Networking;
-using SimpleJSON;
+using NLog;
 using ICSharpCode.SharpZipLib.Zip;
+using SongLoaderPlugin.OverrideClasses;
 
 namespace TwitchIntegrationPlugin
 {
-    class TwitchIntegrationMasterViewController : VRUINavigationController
+    class TwitchIntegrationMasterViewController : VRUIViewController
     {
         TwitchIntegrationUI ui;
 
@@ -23,34 +24,42 @@ namespace TwitchIntegrationPlugin
         TextMeshProUGUI _SongName;
         MainGameSceneSetupData _mainGameSceneSetupData;
         SongLoader loader = SongLoader.Instance;
+        //RequestQueueController _queueController;
         String customSongsPath;
         bool _doesSongExist;
+        NLog.Logger logger;
 
         QueuedSong song;
+        private MenuSceneSetupData _menuSceneSetupData;
 
-        protected override void DidActivate()
+
+        protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
+            TwitchIntegration ti = Resources.FindObjectsOfTypeAll<TwitchIntegration>().First();
+
             ui = TwitchIntegrationUI._instance;
+            logger = LogManager.GetCurrentClassLogger();
 
             try
             {
                 _mainGameSceneSetupData = Resources.FindObjectsOfTypeAll<MainGameSceneSetupData>().First();
+                _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupData>().First();
             }
             catch (Exception e)
             {
-                Console.WriteLine("Getting Song Controller Failed. \n" + e);
+                logger.Error("Getting Song Controller Failed. \n" + e);
             }
 
 
-            if (StaticData.songQueue.Count == 0)
+            if (StaticData.queueList.Count == 0)
             {
                 DismissModalViewController(null, false);
             } 
             else
             {
-                Console.WriteLine("Queue Menu Activated.");
+                logger.Debug("Queue Menu Activated.");
                 string docPath = "";
-                song = StaticData.songQueue.Dequeue();
+                song = (QueuedSong)StaticData.queueList[0];
                 docPath = Application.dataPath;
                 docPath = docPath.Substring(0, docPath.Length - 5);
                 docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
@@ -64,34 +73,48 @@ namespace TwitchIntegrationPlugin
                 _SongName.rectTransform.sizeDelta = new Vector2(80f, 20f);
             }
 
+            /*if(_queueController == null)
+            {
+                _queueController = ui.CreateViewController<RequestQueueController>("Twitch Queue Controller");
+                _queueController._parentMasterViewController = this;
+            }
+            screen.screenSystem.leftScreen.SetRootViewController(_queueController);
+            screen.screenSystem.rightScreen.SetRootViewController(null);*/
+
             if (_nextButton == null)
             {
                 _nextButton = ui.CreateUIButton(rectTransform, "ApplyButton");
                 (_nextButton.transform as RectTransform).anchoredPosition = new Vector2(-25f, 10f);
                 (_nextButton.transform as RectTransform).sizeDelta = new Vector2(25f, 10f);
-                ui.SetButtonText(ref _nextButton, (Directory.Exists(customSongsPath)) ? "Play" : "Download");
+                ui.SetButtonText(ref _nextButton, (doesSongExist(song)) ? "Play" : "Download");
 
                 _nextButton.onClick.AddListener(delegate ()
                 {
                     _doesSongExist = (doesSongExist(song)) ? true : false;
 
-                    Console.WriteLine("CLICKED");
+                    logger.Debug("CLICKED");
                     if (_doesSongExist) {
-                        Console.WriteLine("Starting to play song");
-                        try
+                        CustomLevel _songInfo = SongLoader.CustomLevels.Find(x => x.songName == song._songName && x.songAuthorName == song._authName);
+                        SongLoader.Instance.LoadAudioClipForLevel(_songInfo, (CustomLevel level) =>
                         {
-                            CustomSongInfo _songInfo = SongLoader.CustomSongInfos.Find(x => x.songName == song._songName && x.authorName == song._authName);
-                            _mainGameSceneSetupData.SetData(_songInfo.levelId, getHighestDiff(_songInfo), null, null, 0f, GameplayOptions.defaultOptions, GameplayMode.SoloStandard, null);
-                            _mainGameSceneSetupData.TransitionToScene(0.7f);
-                        }
-                        catch(Exception e)
-                        {
-                            Console.WriteLine(e);
-                        }
+                            logger.Debug("Starting to play song");
+                            try
+                            {
+                                StaticData.queueList.RemoveAt(0);
+                                StaticData.didStartFromQueue = true;
+                                _menuSceneSetupData.StartLevel(getHighestDiff(_songInfo), GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
+                            }
+                            catch (Exception e)
+                            {
+                                StaticData.didStartFromQueue = false;
+                                logger.Error(e);
+                            }
+                        });
                     }
                     else
                     {
-                        StartCoroutine(DownloadSongCoroutine(song));
+                        logger.Debug("Starting Download");
+                        DownloadSongCoroutine(song);
                     }
                 });
             }
@@ -105,8 +128,10 @@ namespace TwitchIntegrationPlugin
 
                 _skipButton.onClick.AddListener(delegate ()
                 {
-                    string docPath = "";
-                    song = StaticData.songQueue.Dequeue();
+                    StaticData.queueList.RemoveAt(0);
+                    song = (QueuedSong)StaticData.queueList[0];
+
+                    String docPath = "";
                     docPath = Application.dataPath;
                     docPath = docPath.Substring(0, docPath.Length - 5);
                     docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
@@ -125,89 +150,102 @@ namespace TwitchIntegrationPlugin
                     DismissModalViewController(null, false);
                 });
             }
-            base.DidActivate();
+            base.DidActivate(false, ActivationType.AddedToHierarchy);
         }
 
-        public IEnumerator DownloadSongCoroutine(QueuedSong songInfo)
+        /*private void HandleLevelDidFinish(MainGameSceneSetupData mainGameSceneSetupData, LevelCompletionResults levelCompletionResults)
+        {
+            this.levelCompletionResults = levelCompletionResults;
+            mainGameSceneSetupData.didFinishEvent -= HandleLevelDidFinish;
+            _menuSceneSetupData.TransitionToScene((levelCompletionResults == null) ? 0.35f : 1.3f);
+        }*/
+
+        public void DownloadSongCoroutine(QueuedSong songInfo)
         {
 
             ui.SetButtonText(ref _nextButton, "Downloading...");
             _nextButton.interactable = false;
             _skipButton.interactable = false;
 
+            logger.Debug("Web Request sent to: " + songInfo._downloadUrl);
             UnityWebRequest www = UnityWebRequest.Get(songInfo._downloadUrl);
-            www.timeout = 10;
-            yield return www.SendWebRequest();
+            www.timeout = 2;
+            www.SendWebRequest().completed += (AsyncOperation asyncOp) => {
 
-            if (www.isNetworkError || www.isHttpError)
-            {
-                Console.WriteLine("error connecting to download.");
-            }
-            else
-            {
-                string zipPath = "";
-                string docPath = "";
-                string customSongsPath = "";
-                try
+                if (www.isNetworkError || www.isHttpError || www.error != null)
                 {
-                    byte[] data = www.downloadHandler.data;
-
-                    docPath = Application.dataPath;
-                    docPath = docPath.Substring(0, docPath.Length - 5);
-                    docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
-                    customSongsPath = docPath + "/CustomSongs/" + songInfo._id + "/";
-                    zipPath = customSongsPath + songInfo._beatName + ".zip";
-                    if (!Directory.Exists(customSongsPath))
+                    logger.Error("error connecting to download: " + www.error);
+                }
+                else
+                {
+                    string zipPath = "";
+                    string docPath = "";
+                    string customSongsPath = "";
+                    try
                     {
-                        Directory.CreateDirectory(customSongsPath);
+                        logger.Debug("Download complete.");
+                        byte[] data = www.downloadHandler.data;
+
+
+                        docPath = Application.dataPath;
+                        docPath = docPath.Substring(0, docPath.Length - 5);
+                        docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
+                        customSongsPath = docPath + "/CustomSongs/" + songInfo._id + "/";
+                        zipPath = customSongsPath + songInfo._beatName + ".zip";
+                        if (!Directory.Exists(customSongsPath))
+                        {
+                            Directory.CreateDirectory(customSongsPath);
+                        }
+                        File.WriteAllBytes(zipPath, data);
                     }
-                    File.WriteAllBytes(zipPath, data);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    yield break;
-                }
+                    catch (Exception e)
+                    {
+                        logger.Error(e);
+                    }
 
-                FastZip zip = new FastZip();
-                zip.ExtractZip(zipPath, customSongsPath, null);
-                var subDir = Directory.GetDirectories(customSongsPath);
-                try
-                {
-                    SongLoader.Instance.RefreshSongs();
-                }
-                catch(Exception e)
-                {
-                    Console.WriteLine(e);
-                }
-                File.Delete(zipPath);
+                    FastZip zip = new FastZip();
+                    zip.ExtractZip(zipPath, customSongsPath, null);
+                    var subDir = Directory.GetDirectories(customSongsPath);
+                    try
+                    {
+                        SongLoader.Instance.RefreshSongs();
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error(e);
+                    }
+                    File.Delete(zipPath);
 
-                _nextButton.interactable = true;
-                _skipButton.interactable = true;
-                ui.SetButtonText(ref _nextButton, "Play");
-            }
+                    _nextButton.interactable = true;
+                    _skipButton.interactable = true;
+                    ui.SetButtonText(ref _nextButton, "Play");
+                }
+            };
         }
 
-        public CustomLevelStaticData.Difficulty getHighestDiff(CustomSongInfo song)
+        public IStandardLevelDifficultyBeatmap getHighestDiff(CustomLevel song)
         {
-            Console.WriteLine("Getting diff");
-            LevelStaticData.Difficulty highest = LevelStaticData.Difficulty.Normal;
-            foreach(var difficulty in song.difficultyLevels)
+            logger.Debug("Getting diff");
+
+            var highest = LevelDifficulty.Easy;
+            IStandardLevelDifficultyBeatmap result = null;
+            foreach(var difficulty in song.difficultyBeatmaps)
             {
-                LevelStaticData.Difficulty diff = (LevelStaticData.Difficulty)Enum.Parse(typeof(LevelStaticData.Difficulty), difficulty.difficulty);
+                var diff = difficulty.difficulty;
                 if(diff > highest)
                 {
                     highest = diff;
+                    result = difficulty;
                 }
             }
-            return highest;
+            return result;
         }
 
         public bool doesSongExist(QueuedSong song) 
         {
             try
             {
-                if (SongLoader.CustomLevelStaticDatas.First(x => song._songName == x.songName && song._authName == x.authorName) != null)
+                if (SongLoader.CustomLevels.First(x => x.songName == song._songName && x.songAuthorName == song._authName) != null)
                 {
                     return true;
                 }
@@ -215,7 +253,7 @@ namespace TwitchIntegrationPlugin
             } 
             catch(Exception e)
             {
-                Console.WriteLine(e);
+                logger.Debug(e); //Not a fatal error.
                 return false;
             }
         }

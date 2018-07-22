@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 using Image = UnityEngine.UI.Image;
+using HMUI;
+using System.Collections;
 
 namespace TwitchIntegrationPlugin
 {
@@ -24,6 +26,11 @@ namespace TwitchIntegrationPlugin
 
         public TwitchIntegrationMasterViewController _twitchIntegrationViewController;
 
+        static public Dictionary<string, Sprite> _cachedSprites = new Dictionary<string, Sprite>();
+
+        NLog.Logger logger;
+
+
         internal static void OnLoad()
         {
             if(_instance != null)
@@ -35,6 +42,7 @@ namespace TwitchIntegrationPlugin
 
         private void Awake()
         {
+            logger = NLog.LogManager.GetCurrentClassLogger();
             _instance = this;
             
             foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
@@ -52,7 +60,7 @@ namespace TwitchIntegrationPlugin
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                logger.Error(e);
             }
 
             try
@@ -62,7 +70,7 @@ namespace TwitchIntegrationPlugin
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                logger.Error(e);
             }
 
         }
@@ -77,8 +85,7 @@ namespace TwitchIntegrationPlugin
                 (_twitchModeButton.transform as RectTransform).sizeDelta = new Vector2(25f, 25f);
 
                 SetButtonText(ref _twitchModeButton, (StaticData.TwitchMode) ? "Twitch Mode: ON" : "Twitch Mode: OFF");
-
-                SetButtonIcon(ref _twitchModeButton, icons.First(x => (x.name == "SettingsIcon")));
+                //SetButtonIcon(ref _twitchModeButton, icons.First(x => (x.name == "SettingsIcon")));
 
                 _twitchModeButton.onClick.AddListener(delegate ()
                 {
@@ -95,7 +102,7 @@ namespace TwitchIntegrationPlugin
                 });
             } catch(Exception e)
             {
-                Console.WriteLine(e);
+                logger.Error(e);
             }
         }
 
@@ -110,7 +117,7 @@ namespace TwitchIntegrationPlugin
 
                 SetButtonText(ref _debugButton, "Twitch Debug");
 
-                SetButtonIcon(ref _debugButton, icons.First(x => (x.name == "SettingsIcon")));
+                //SetButtonIcon(ref _debugButton, icons.First(x => (x.name == "SettingsIcon")));
 
                 _debugButton.onClick.AddListener(delegate ()
                 {
@@ -124,13 +131,13 @@ namespace TwitchIntegrationPlugin
                     }
                     catch(Exception e)
                     {
-                        Console.WriteLine(e);
+                        logger.Error(e);
                     }
                 });
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                logger.Error(e);
             }
         }
 
@@ -235,5 +242,26 @@ namespace TwitchIntegrationPlugin
             }
 
         }
+
+        static public IEnumerator LoadSprite(string spritePath, TableCell obj)
+        {
+            Texture2D tex;
+
+            if (_cachedSprites.ContainsKey(spritePath))
+            {
+                obj.GetComponentsInChildren<UnityEngine.UI.Image>()[2].sprite = _cachedSprites[spritePath];
+                yield break;
+            }
+
+            using (WWW www = new WWW(spritePath))
+            {
+                yield return www;
+                tex = www.texture;
+                var newSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.one * 0.5f, 100, 1);
+                _cachedSprites.Add(spritePath, newSprite);
+                obj.GetComponentsInChildren<UnityEngine.UI.Image>()[2].sprite = newSprite;
+            }
+        }
+
     }
 }
