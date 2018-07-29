@@ -14,7 +14,7 @@ using SongLoaderPlugin.OverrideClasses;
 
 namespace TwitchIntegrationPlugin
 {
-    class TwitchIntegrationMasterViewController : VRUIViewController
+    class LevelRequestMasterViewController : VRUIViewController
     {
         TwitchIntegrationUI ui;
 
@@ -24,7 +24,6 @@ namespace TwitchIntegrationPlugin
         TextMeshProUGUI _SongName;
         MainGameSceneSetupData _mainGameSceneSetupData;
         SongLoader loader = SongLoader.Instance;
-        //RequestQueueController _queueController;
         String customSongsPath;
         bool _doesSongExist;
         NLog.Logger logger;
@@ -201,7 +200,7 @@ namespace TwitchIntegrationPlugin
 
                 if (www.isNetworkError || www.isHttpError || timeout)
                 {
-                    logger.Error("error connecting to download: " + ((timeout) ? "Connection timed out" : www.error ));
+    
                     _skipButton.interactable = true;
                     _nextButton.interactable = true;
                 }
@@ -239,7 +238,7 @@ namespace TwitchIntegrationPlugin
                     var subDir = Directory.GetDirectories(customSongsPath);
                     try
                     {
-                        SongLoader.Instance.RefreshSongs();
+                        SongLoader.Instance.RefreshSongs(false);
                         SongLoader.SongsLoadedEvent += (SongLoader, list) => { _nextButton.interactable = true; };
                     }
                     catch (Exception e)

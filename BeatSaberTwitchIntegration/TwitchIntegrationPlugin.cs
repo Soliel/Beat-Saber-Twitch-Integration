@@ -28,7 +28,7 @@ namespace TwitchIntegrationPlugin
             nlogconfig.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
             nlogconfig.AddRule(LogLevel.Info, LogLevel.Fatal, logfile);
             LogManager.Configuration = nlogconfig;
-            logger = LogManager.GetCurrentClassLogger();
+            //logger = LogManager.GetCurrentClassLogger();
         }
 
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
@@ -46,17 +46,11 @@ namespace TwitchIntegrationPlugin
 
         public void OnLevelWasLoaded(int level)
         {
-            if (level == 1)
+            if (SceneManager.GetActiveScene().name == "Menu")
             {
                 TwitchIntegrationUI.OnLoad();
-                TwitchIntegration.OnLoad(level);
+                TwitchIntegration.OnLoad(SceneManager.GetActiveScene().name);
             }
-            else if (level > 1)
-            {
-                TwitchIntegration.OnLoad(level);
-            }
-
-            logger.Debug(SceneManager.GetActiveScene().name);
         }
 
         public void OnLevelWasInitialized(int level)

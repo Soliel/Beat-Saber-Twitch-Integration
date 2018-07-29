@@ -24,7 +24,7 @@ namespace TwitchIntegrationPlugin
 
         public static List<Sprite> icons = new List<Sprite>();
 
-        public TwitchIntegrationMasterViewController _twitchIntegrationViewController;
+        public LevelRequestMasterViewController _twitchIntegrationViewController;
 
         static public Dictionary<string, Sprite> _cachedSprites = new Dictionary<string, Sprite>();
 
@@ -125,7 +125,7 @@ namespace TwitchIntegrationPlugin
                     {
                         if (_twitchIntegrationViewController == null)
                         {
-                            _twitchIntegrationViewController = CreateViewController<TwitchIntegrationMasterViewController>("Twitch Panel");
+                            _twitchIntegrationViewController = CreateViewController<LevelRequestMasterViewController>("Twitch Panel");
                         }
                         _mainMenuViewController.PresentModalViewController(_twitchIntegrationViewController, null, false);
                     }

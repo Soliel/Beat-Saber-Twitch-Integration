@@ -12,14 +12,14 @@ namespace TwitchIntegrationPlugin
     {
         TwitchIntegrationUI ui;
         public static TwitchIntegration _instance;
-        TwitchIntegrationMasterViewController _twitchIntegrationMasterViewController;
-        static int _loadedLevel;
+        LevelRequestMasterViewController _twitchIntegrationMasterViewController;
+        static String _loadedLevel;
         NLog.Logger logger;
 
-        public static void OnLoad(int level)
+        public static void OnLoad(String levelName)
         {
             //Console.WriteLine("Level jacker loaded.");
-            _loadedLevel = level;
+            _loadedLevel = levelName;
 
             if(_instance == null)
             {
@@ -36,7 +36,7 @@ namespace TwitchIntegrationPlugin
         {
             //Console.WriteLine("Level Changed was called: current level is " + _loadedLevel);
             var _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupData>().First();
-            if (_loadedLevel <= 1)
+            if (_loadedLevel == "Menu")
             {
                 var flag = StaticData.didStartFromQueue;
                 StaticData.didStartFromQueue = false;
@@ -69,7 +69,7 @@ namespace TwitchIntegrationPlugin
             
             try
             {
-                TwitchIntegrationMasterViewController queue = ui.CreateViewController<TwitchIntegrationMasterViewController>("Twitch Panel");
+                LevelRequestMasterViewController queue = ui.CreateViewController<LevelRequestMasterViewController>("Twitch Panel");
                 FindObjectOfType<SoloModeSelectionViewController>().DismissModalViewController(null, true);
                 FindObjectOfType<MainMenuViewController>().PresentModalViewController(queue, null, true);
             }
@@ -91,7 +91,7 @@ namespace TwitchIntegrationPlugin
                 try
                 {
                     logger.Debug("Results!");
-                    TwitchIntegrationMasterViewController queue = ui.CreateViewController<TwitchIntegrationMasterViewController>("twitch panel");
+                    LevelRequestMasterViewController queue = ui.CreateViewController<LevelRequestMasterViewController>("twitch panel");
                     viewController.DismissModalViewController(null, true);
 
                     FindObjectOfType<StandardLevelListViewController>().DismissModalViewController(null, true);
