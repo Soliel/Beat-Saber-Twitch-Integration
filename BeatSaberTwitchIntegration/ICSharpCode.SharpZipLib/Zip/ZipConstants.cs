@@ -1,9 +1,7 @@
 using System;
-using System.Globalization;
 using System.Text;
-using System.Threading;
 
-namespace ICSharpCode.SharpZipLib.Zip
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip
 {
 	#region Enumerations
 

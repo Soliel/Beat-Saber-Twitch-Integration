@@ -1,8 +1,8 @@
 using System;
-using ICSharpCode.SharpZipLib.Checksum;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Checksum;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
-namespace ICSharpCode.SharpZipLib.Zip.Compression
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression
 {
 	/// <summary>
 	/// Inflater is used to decompress data that has been compressed according

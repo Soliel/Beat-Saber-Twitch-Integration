@@ -1,10 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ICSharpCode.SharpZipLib.Core
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Core
 {
 	/// <summary>
 	/// NameFilter is a string matching class which allows for both positive and negative

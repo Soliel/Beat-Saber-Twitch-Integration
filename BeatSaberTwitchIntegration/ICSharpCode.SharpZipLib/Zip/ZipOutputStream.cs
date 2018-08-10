@@ -1,12 +1,11 @@
 using System;
-using System.IO;
-using System.Collections;
-using ICSharpCode.SharpZipLib.Checksum;
-using ICSharpCode.SharpZipLib.Zip.Compression;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using System.Collections.Generic;
+using System.IO;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Checksum;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
-namespace ICSharpCode.SharpZipLib.Zip
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip
 {
 	/// <summary>
 	/// This is a DeflaterOutputStream that writes the files into a zip

@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using ICSharpCode.SharpZipLib.Core;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Core;
 
-namespace ICSharpCode.SharpZipLib.Zip
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip
 {
 	/// <summary>
 	/// Basic implementation of <see cref="IEntryFactory"></see>

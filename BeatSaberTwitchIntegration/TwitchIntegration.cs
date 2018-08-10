@@ -1,97 +1,88 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using NLog;
-using VRUI;
+using TwitchIntegrationPlugin.UI;
 
 namespace TwitchIntegrationPlugin
 {
-    class TwitchIntegration : MonoBehaviour
+    public class TwitchIntegration : MonoBehaviour
     {
-        TwitchIntegrationUI ui;
-        public static TwitchIntegration _instance;
-        LevelRequestMasterViewController _twitchIntegrationMasterViewController;
-        static String _loadedLevel;
-        NLog.Logger logger;
+        private TwitchIntegrationUi _ui;
+        public static TwitchIntegration Instance;
+        //private LevelRequestMasterViewController _twitchIntegrationMasterViewController;
+        private static string _loadedLevel;
+        private NLog.Logger _logger;
 
-        public static void OnLoad(String levelName)
+        public static void OnLoad(string levelName)
         {
             //Console.WriteLine("Level jacker loaded.");
             _loadedLevel = levelName;
 
-            if(_instance == null)
+            if(Instance == null)
             {
                 new GameObject("Beat Saber Twitch Integration").AddComponent<TwitchIntegration>();
-                return;
             }
             else
             {
-                _instance.OnLevelChange();
+                Instance.OnLevelChange();
             }
         }
 
         public void OnLevelChange()
         {
             //Console.WriteLine("Level Changed was called: current level is " + _loadedLevel);
-            var _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupData>().First();
-            if (_loadedLevel == "Menu")
-            {
-                var flag = StaticData.didStartFromQueue;
-                StaticData.didStartFromQueue = false;
+            //var menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupData>().First();
+            if (_loadedLevel != "Menu") return;
 
-                if (StaticData.TwitchMode && StaticData.queueList.Count > 0)
-                {
-                    if(flag)
-                    {
-                        StartCoroutine(WaitForMenu());
-                    }
-                    else
-                    {
-                        StartCoroutine(WaitForResults());
-                    }
-                }
-            }
+            var flag = StaticData.DidStartFromQueue;
+            StaticData.DidStartFromQueue = false;
+
+            if (!StaticData.TwitchMode || StaticData.QueueList.Count <= 0) return;
+
+            StartCoroutine(flag ? WaitForMenu() : WaitForResults());
         }
 
+        [UsedImplicitly]
         private void Awake()
         {
-            _instance = this;
+            Instance = this;
             DontDestroyOnLoad(this);
-            ui = TwitchIntegrationUI._instance;
-            logger = LogManager.GetCurrentClassLogger();
+            _ui = TwitchIntegrationUi.Instance;
+            _logger = LogManager.GetCurrentClassLogger();
         }
 
-        IEnumerator WaitForMenu()
+        public IEnumerator WaitForMenu()
         {
-            yield return new WaitUntil(() => { return Resources.FindObjectsOfTypeAll<SoloModeSelectionViewController>().Count() > 0; });
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<MainMenuViewController>().Any());
             
             try
             {
-                LevelRequestMasterViewController queue = ui.CreateViewController<LevelRequestMasterViewController>("Twitch Panel");
+                var queue = _ui.CreateViewController<LevelRequestMasterViewController>("Twitch Panel");
                 FindObjectOfType<SoloModeSelectionViewController>().DismissModalViewController(null, true);
                 FindObjectOfType<MainMenuViewController>().PresentModalViewController(queue, null, true);
             }
             catch (Exception ex)
             {
-                logger.Error("Failed to find MainMenuViewController: " + ex);
+                _logger.Error("Failed to find MainMenuViewController: " + ex);
             }
         }
 
         
-        IEnumerator WaitForResults()
+        public IEnumerator WaitForResults()
         {
-            logger.Debug("Waiting for contoller to init.");
-            yield return new WaitUntil(() => { return Resources.FindObjectsOfTypeAll<ResultsViewController>().Count() > 0; });
-            ResultsViewController results = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
+            _logger.Debug("Waiting for contoller to init.");
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ResultsViewController>().Any());
+            var results = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
 
             results.continueButtonPressedEvent += delegate (ResultsViewController viewController) {
 
                 try
                 {
-                    logger.Debug("Results!");
-                    LevelRequestMasterViewController queue = ui.CreateViewController<LevelRequestMasterViewController>("twitch panel");
+                    _logger.Debug("Results!");
+                    var queue = _ui.CreateViewController<LevelRequestMasterViewController>("twitch panel");
                     viewController.DismissModalViewController(null, true);
 
                     FindObjectOfType<StandardLevelListViewController>().DismissModalViewController(null, true);
@@ -102,7 +93,7 @@ namespace TwitchIntegrationPlugin
                 }
                 catch (Exception e)
                 {
-                    logger.Error($"RESULTS EXCEPTION: {e}");
+                    _logger.Error($"RESULTS EXCEPTION: {e}");
                 }
             };
         }

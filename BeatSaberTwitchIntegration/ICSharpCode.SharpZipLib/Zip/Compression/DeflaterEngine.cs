@@ -1,7 +1,7 @@
 using System;
-using ICSharpCode.SharpZipLib.Checksum;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Checksum;
 
-namespace ICSharpCode.SharpZipLib.Zip.Compression
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression
 {
 	/// <summary>
 	/// Strategies for deflater

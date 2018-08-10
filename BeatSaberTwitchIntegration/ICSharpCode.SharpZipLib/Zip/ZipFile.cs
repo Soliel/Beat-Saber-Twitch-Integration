@@ -1,16 +1,15 @@
 using System;
 using System.Collections;
-using System.IO;
-using System.Text;
-using System.Globalization;
-using System.Security.Cryptography;
-using ICSharpCode.SharpZipLib.Core;
-using ICSharpCode.SharpZipLib.Checksum;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
-using ICSharpCode.SharpZipLib.Zip.Compression;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Checksum;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Core;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
-namespace ICSharpCode.SharpZipLib.Zip
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip
 {
 	#region Keys Required Event Args
 	/// <summary>

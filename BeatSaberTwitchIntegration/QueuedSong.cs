@@ -1,36 +1,35 @@
-﻿using System;
-using SongLoaderPlugin;
+﻿using SongLoaderPlugin;
 
 namespace TwitchIntegrationPlugin
 {
     public class QueuedSong
     {
-        public string   _songName    { get; }
-        public string   _beatName    { get; }
-        public string   _authName    { get; }
-        public float    _bpm         { get; }
-        public string   _id          { get; }
-        public string   _downloadUrl { get; }
-        public string   _requestedBy { get; }
-        public string   _coverUrl    { get; }
-        public string   _songSubName { get; }
+        public string   SongName    { get; }
+        public string   BeatName    { get; }
+        public string   AuthName    { get; }
+        public float    Bpm         { get; }
+        public string   Id          { get; }
+        public string   DownloadUrl { get; }
+        public string   RequestedBy { get; }
+        public string   CoverUrl    { get; }
+        public string   SongSubName { get; }
 
-        public QueuedSong(String songname, String beatname, String authname, String bpm, String id, String songSubName, String dlURL, String requestedBy, String coverURL)
+        public QueuedSong(string songname, string beatname, string authname, string bpm, string id, string songSubName, string dlUrl, string requestedBy, string coverUrl)
         {
-            _songName = songname;
-            _beatName = beatname;
-            _authName = authname;
-            _id = id;
-            _bpm = float.Parse(bpm, System.Globalization.CultureInfo.InvariantCulture);
-            _songSubName = songSubName;
-            _downloadUrl = dlURL;
-            _requestedBy = requestedBy;
-            _coverUrl = coverURL;
+            SongName = songname;
+            BeatName = beatname;
+            AuthName = authname;
+            Id = id;
+            Bpm = float.Parse(bpm, System.Globalization.CultureInfo.InvariantCulture);
+            SongSubName = songSubName;
+            DownloadUrl = dlUrl;
+            RequestedBy = requestedBy;
+            CoverUrl = coverUrl;
         }
     
         public bool CompareSongs(CustomSongInfo song)
         {
-            if(_songName == song.songName && _authName == song.songAuthorName && _bpm == song.beatsPerMinute)
+            if(SongName == song.songName && AuthName == song.songAuthorName && Bpm == song.beatsPerMinute)
             {
                 return true;
             }

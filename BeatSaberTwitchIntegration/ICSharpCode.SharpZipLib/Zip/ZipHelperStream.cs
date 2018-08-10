@@ -1,8 +1,7 @@
 using System;
 using System.IO;
-using System.Text;
 
-namespace ICSharpCode.SharpZipLib.Zip
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip
 {
 	/// <summary>
 	/// Holds data pertinent to a data descriptor.

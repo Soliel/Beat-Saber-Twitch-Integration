@@ -1,185 +1,161 @@
 ﻿using System;
-using System.Linq;
-using UnityEngine;
-using UnityEngine.UI;
-using VRUI;
-using TMPro;
 using System.Collections;
 using System.IO;
-using SongLoaderPlugin;
-using UnityEngine.Networking;
+using System.Linq;
 using NLog;
-using ICSharpCode.SharpZipLib.Zip;
+using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
+using TMPro;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip;
+using UnityEngine;
+using UnityEngine.Networking;
+using UnityEngine.UI;
+using VRUI;
 
-namespace TwitchIntegrationPlugin
+namespace TwitchIntegrationPlugin.UI
 {
-    class LevelRequestMasterViewController : VRUIViewController
+    public class LevelRequestMasterViewController : VRUINavigationController
     {
-        TwitchIntegrationUI ui;
+        private TwitchIntegrationUi _ui;
 
-        Button _skipButton;
-        Button _nextButton;
-        Button _backButton;
-        TextMeshProUGUI _SongName;
-        MainGameSceneSetupData _mainGameSceneSetupData;
-        SongLoader loader = SongLoader.Instance;
-        String customSongsPath;
-        bool _doesSongExist;
-        NLog.Logger logger;
+        private Button _skipButton;
+        private Button _nextButton;
+        private Button _backButton;
+        private TextMeshProUGUI _songName;
+        private bool _doesSongExist;
+        private NLog.Logger _logger;
 
-        QueuedSong song;
+        private QueuedSong _song;
         private MenuSceneSetupData _menuSceneSetupData;
+
 
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
-            TwitchIntegration ti = Resources.FindObjectsOfTypeAll<TwitchIntegration>().First();
+            //var ti = Resources.FindObjectsOfTypeAll<TwitchIntegration>().First();
 
-            ui = TwitchIntegrationUI._instance;
-            logger = LogManager.GetCurrentClassLogger();
+            _ui = TwitchIntegrationUi.Instance;
+            _logger = LogManager.GetCurrentClassLogger();
 
             try
             {
-                _mainGameSceneSetupData = Resources.FindObjectsOfTypeAll<MainGameSceneSetupData>().First();
+                //_mainGameSceneSetupData = Resources.FindObjectsOfTypeAll<MainGameSceneSetupData>().First();
                 _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupData>().First();
             }
             catch (Exception e)
             {
-                logger.Error("Getting Song Controller Failed. \n" + e);
+                _logger.Error("Getting Song Controller Failed. \n" + e);
             }
 
 
-            if (StaticData.queueList.Count == 0)
+            if (StaticData.QueueList.Count == 0)
             {
-                DismissModalViewController(null, false);
+                DismissModalViewController(null);
             } 
             else
             {
-                logger.Debug("Queue Menu Activated.");
-                string docPath = "";
-                song = (QueuedSong)StaticData.queueList[0];
-                docPath = Application.dataPath;
+                _logger.Debug("Queue Menu Activated.");
+                //string docPath = "";
+                _song = (QueuedSong)StaticData.QueueList[0];
+                /*docPath = Application.dataPath;
                 docPath = docPath.Substring(0, docPath.Length - 5);
                 docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
-                customSongsPath = docPath + "/CustomSongs/" + song._id + "/";
+                customSongsPath = docPath + "/CustomSongs/" + song._id + "/";*/
             }
 
-            if (_SongName == null)
+            if (_songName == null)
             {
-                _SongName = ui.CreateText(rectTransform, song._beatName, new Vector2(5f, -30f));
-                _SongName.fontSize = 8f;
-                _SongName.rectTransform.sizeDelta = new Vector2(80f, 20f);
+                _songName = _ui.CreateText(rectTransform, _song.BeatName, new Vector2(5f, -30f));
+                _songName.fontSize = 8f;
+                _songName.rectTransform.sizeDelta = new Vector2(80f, 20f);
             }
-
-            /*if(_queueController == null)
-            {
-                _queueController = ui.CreateViewController<RequestQueueController>("Twitch Queue Controller");
-                _queueController._parentMasterViewController = this;
-            }
-            screen.screenSystem.leftScreen.SetRootViewController(_queueController);
-            screen.screenSystem.rightScreen.SetRootViewController(null);*/
 
             if (_nextButton == null)
             {
-                _nextButton = ui.CreateUIButton(rectTransform, "ApplyButton");
-                (_nextButton.transform as RectTransform).anchoredPosition = new Vector2(-25f, 10f);
-                (_nextButton.transform as RectTransform).sizeDelta = new Vector2(25f, 10f);
-                ui.SetButtonText(ref _nextButton, (doesSongExist(song)) ? "Play" : "Download");
+                _nextButton = _ui.CreateUiButton(rectTransform, "ApplyButton");
+                ((RectTransform) _nextButton.transform).anchoredPosition = new Vector2(-25f, 10f);
+                ((RectTransform) _nextButton.transform).sizeDelta = new Vector2(25f, 10f);
+                _ui.SetButtonText(ref _nextButton, DoesSongExist(_song) ? "Play" : "Download");
 
-                _nextButton.onClick.AddListener(delegate ()
+                _nextButton.onClick.AddListener(delegate
                 {
-                    _doesSongExist = (doesSongExist(song)) ? true : false;
+                    _doesSongExist = DoesSongExist(_song);
 
-                    logger.Debug("CLICKED");
+                    _logger.Debug("CLICKED");
                     if (_doesSongExist) {
                         try
                         {
-                            CustomLevel _songInfo = SongLoader.CustomLevels.Find(x => x.songName == song._songName &&
-                                x.songAuthorName == song._authName &&
-                                x.beatsPerMinute == song._bpm &&
-                                x.songSubName == song._songSubName);
+                            var songInfo = SongLoader.CustomLevels.Find(x => x.songName == _song.SongName &&
+                                x.songAuthorName == _song.AuthName &&
+                                x.songSubName == _song.SongSubName);
 
-                            SongLoader.Instance.LoadAudioClipForLevel(_songInfo, (CustomLevel level) =>
+                            SongLoader.Instance.LoadAudioClipForLevel(songInfo, (level) =>
                             {
-                                logger.Debug("Starting to play song");
+                                _logger.Debug("Starting to play song");
                                 try
                                 {
-                                    StaticData.queueList.RemoveAt(0);
-                                    StaticData.didStartFromQueue = true;
+                                    StaticData.QueueList.RemoveAt(0);
+                                    StaticData.DidStartFromQueue = true;
 
-                                    _menuSceneSetupData.StartLevel(getHighestDiff(_songInfo), GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
+                                    _menuSceneSetupData.StartLevel(GetHighestDiff(songInfo), GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
                                 }
                                 catch (Exception e)
                                 {
-                                    StaticData.didStartFromQueue = false;
-                                    logger.Error(e);
+                                    StaticData.DidStartFromQueue = false;
+                                    _logger.Error(e);
                                 }
                             });
                         }
                         catch(Exception ex)
                         {
-                            logger.Error(ex);
+                            _logger.Error(ex);
                         }
                     }
                     else
                     {
-                        logger.Debug("Starting Download");
-                        StartCoroutine(DownloadSongCoroutine(song));
+                        _logger.Debug("Starting Download");
+                        StartCoroutine(DownloadSongCoroutine(_song));
                     }
                 });
             }
 
             if (_skipButton == null)
             {
-                _skipButton = ui.CreateUIButton(rectTransform, "ApplyButton");
-                (_skipButton.transform as RectTransform).anchoredPosition = new Vector2(5f, 10f);
-                (_skipButton.transform as RectTransform).sizeDelta = new Vector2(25f, 10f);
-                ui.SetButtonText(ref _skipButton, "Skip Song");
+                _skipButton = _ui.CreateUiButton(rectTransform, "ApplyButton");
+                ((RectTransform) _skipButton.transform).anchoredPosition = new Vector2(5f, 10f);
+                ((RectTransform) _skipButton.transform).sizeDelta = new Vector2(25f, 10f);
+                _ui.SetButtonText(ref _skipButton, "Skip Song");
 
-                _skipButton.onClick.AddListener(delegate ()
+                _skipButton.onClick.AddListener(delegate 
                 {
-                    StaticData.queueList.RemoveAt(0);
-                    song = (QueuedSong)StaticData.queueList[0];
+                    StaticData.QueueList.RemoveAt(0);
+                    _song = (QueuedSong)StaticData.QueueList[0];
 
-                    String docPath = "";
-                    docPath = Application.dataPath;
-                    docPath = docPath.Substring(0, docPath.Length - 5);
-                    docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
-                    customSongsPath = docPath + "/CustomSongs/" + song._id + "/";
-
-                    _SongName.SetText(song._beatName);
-                    ui.SetButtonText(ref _nextButton, (doesSongExist(song)) ? "Play" : "Download");
+                    _songName.SetText(_song.BeatName);
+                    _ui.SetButtonText(ref _nextButton, (DoesSongExist(_song)) ? "Play" : "Download");
                 });
             }
 
             if (_backButton == null)
             {
-                _backButton = ui.CreateBackButton(rectTransform);
-                _backButton.onClick.AddListener(delegate ()
+                _backButton = _ui.CreateBackButton(rectTransform);
+                _backButton.onClick.AddListener(delegate 
                 {
-                    DismissModalViewController(null, false);
+                    DismissModalViewController(null);
                 });
             }
             base.DidActivate(false, ActivationType.AddedToHierarchy);
         }
 
-        /*private void HandleLevelDidFinish(MainGameSceneSetupData mainGameSceneSetupData, LevelCompletionResults levelCompletionResults)
-        {
-            this.levelCompletionResults = levelCompletionResults;
-            mainGameSceneSetupData.didFinishEvent -= HandleLevelDidFinish;
-            _menuSceneSetupData.TransitionToScene((levelCompletionResults == null) ? 0.35f : 1.3f);
-        }*/
-
         public IEnumerator DownloadSongCoroutine(QueuedSong songInfo)
         {
 
-            ui.SetButtonText(ref _nextButton, "Downloading...");
+            _ui.SetButtonText(ref _nextButton, "Downloading...");
             _nextButton.interactable = false;
             _skipButton.interactable = false;
 
-            logger.Debug("Web Request sent to: " + songInfo._downloadUrl);
-            UnityWebRequest www = UnityWebRequest.Get(songInfo._downloadUrl);
+            _logger.Debug("Web Request sent to: " + songInfo.DownloadUrl);
+            UnityWebRequest www = UnityWebRequest.Get(songInfo.DownloadUrl);
 
             bool timeout = false;
             float time = 0f;
@@ -206,20 +182,19 @@ namespace TwitchIntegrationPlugin
                 }
                 else
                 {
-                    string zipPath = "";
-                    string docPath = "";
-                    string customSongsPath = "";
+                    var zipPath = "";
+                    var customSongsPath = "";
                     try
                     {
-                        logger.Debug("Download complete.");
-                        byte[] data = www.downloadHandler.data;
+                        _logger.Debug("Download complete.");
+                        var data = www.downloadHandler.data;
 
 
-                        docPath = Application.dataPath;
+                        var docPath = Application.dataPath;
                         docPath = docPath.Substring(0, docPath.Length - 5);
-                        docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
-                        customSongsPath = docPath + "/CustomSongs/" + songInfo._id + "/";
-                        zipPath = customSongsPath + songInfo._beatName + ".zip";
+                        docPath = docPath.Substring(0, docPath.LastIndexOf("/", StringComparison.Ordinal));
+                        customSongsPath = docPath + "/CustomSongs/" + songInfo.Id + "/";
+                        zipPath = customSongsPath + songInfo.Id + ".zip";
                         if (!Directory.Exists(customSongsPath))
                         {
                             Directory.CreateDirectory(customSongsPath);
@@ -228,34 +203,34 @@ namespace TwitchIntegrationPlugin
                     }
                     catch (Exception e)
                     {
-                        logger.Error(e);
+                        _logger.Error(e);
                         _nextButton.interactable = true;
                         _skipButton.interactable = true;
                     }
 
-                    FastZip zip = new FastZip();
+                    var zip = new FastZip();
                     zip.ExtractZip(zipPath, customSongsPath, null);
-                    var subDir = Directory.GetDirectories(customSongsPath);
+                    //var subDir = Directory.GetDirectories(customSongsPath);
                     try
                     {
-                        SongLoader.Instance.RefreshSongs(false);
-                        SongLoader.SongsLoadedEvent += (SongLoader, list) => { _nextButton.interactable = true; };
+                        SongLoader.Instance.RefreshSongs();
+                        SongLoader.SongsLoadedEvent += (songLoader, list) => { _nextButton.interactable = true; };
                     }
                     catch (Exception e)
                     {
-                        logger.Error(e);
+                        _logger.Error(e);
                     }
                     File.Delete(zipPath);
 
                     _skipButton.interactable = true;
-                    ui.SetButtonText(ref _nextButton, "Play");
+                    _ui.SetButtonText(ref _nextButton, "Play");
                 }
             }
         }
 
-        public IStandardLevelDifficultyBeatmap getHighestDiff(CustomLevel song)
+        public IStandardLevelDifficultyBeatmap GetHighestDiff(CustomLevel song)
         {
-            logger.Debug("Getting diff");
+            _logger.Debug("Getting diff");
 
             var highest = LevelDifficulty.Easy;
             IStandardLevelDifficultyBeatmap result = null;
@@ -271,22 +246,18 @@ namespace TwitchIntegrationPlugin
             return result;
         }
 
-        public bool doesSongExist(QueuedSong song) 
+        public bool DoesSongExist(QueuedSong song)
         {
             try
             {
-                if (SongLoader.CustomLevels.FirstOrDefault(x => x.songName == song._songName && 
-                    x.songAuthorName == song._authName && 
-                    x.beatsPerMinute == song._bpm && 
-                    x.songSubName == song._songSubName) != null)
-                {
-                    return true;
-                }
-                return false;
-            } 
-            catch(Exception e)
+                return SongLoader.CustomLevels.FirstOrDefault(x => x.songName == song.SongName &&
+                                                                   x.songAuthorName == song.AuthName &&
+                                                                   x.beatsPerMinute == song.Bpm &&
+                                                                   x.songSubName == song.SongSubName) != null;
+            }
+            catch (Exception e)
             {
-                logger.Debug(e); //Not a fatal error.
+                _logger.Debug(e); //Not a fatal error.
                 return false;
             }
         }

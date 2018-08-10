@@ -1,10 +1,9 @@
 using System;
 using System.IO;
-using ICSharpCode.SharpZipLib.Core;
-using ICSharpCode.SharpZipLib.Zip.Compression;
-using static ICSharpCode.SharpZipLib.Zip.Compression.Deflater;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Core;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression;
 
-namespace ICSharpCode.SharpZipLib.Zip
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip
 {
 	/// <summary>
 	/// FastZipEvents supports all events applicable to <see cref="FastZip">FastZip</see> operations.
@@ -654,7 +653,7 @@ namespace ICSharpCode.SharpZipLib.Zip
 		IEntryFactory entryFactory_ = new ZipEntryFactory();
 		INameTransform extractNameTransform_;
 		UseZip64 useZip64_ = UseZip64.Dynamic;
-        CompressionLevel compressionLevel_ = CompressionLevel.DEFAULT_COMPRESSION;
+        Deflater.CompressionLevel compressionLevel_ = Deflater.CompressionLevel.DEFAULT_COMPRESSION;
 
         string password_;
 

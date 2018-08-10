@@ -1,4 +1,4 @@
-namespace ICSharpCode.SharpZipLib.Checksum
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Checksum
 {
 	/// <summary>
 	/// Interface to compute a data checksum used by checked input/output streams.

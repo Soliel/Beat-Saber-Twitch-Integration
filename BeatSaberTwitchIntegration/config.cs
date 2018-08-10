@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TwitchIntegrationPlugin
 {
-    class Config
+    public class Config
     {
         public string Channel { get; set; }
         public string Token { get; set; }
