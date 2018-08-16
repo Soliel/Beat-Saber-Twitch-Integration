@@ -37,6 +37,7 @@ namespace TwitchIntegrationPlugin.UI
                 _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupData>().First();
                 _mainGameSceneSetupData = Resources.FindObjectsOfTypeAll<MainGameSceneSetupData>().First();
                 _resultsFlowCoordinator = Resources.FindObjectsOfTypeAll<ResultsFlowCoordinator>().First();
+
                 if (_levelRequestNavigationController == null)
                 {
                     _levelRequestNavigationController =
@@ -231,18 +232,34 @@ namespace TwitchIntegrationPlugin.UI
         //This essentially rebuilds the UI Hiearchy without using a unity scene. 
         public IEnumerator WaitForMenu()
         {
+            _logger.Debug("Starting wait");
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<MainMenuViewController>().Any());
+            _logger.Debug("Wait over~");
+
+            
+            VRUIViewController parent = FindObjectOfType<MainMenuViewController>();
+            try
+            {
+                if (FindObjectOfType<SoloModeSelectionViewController>() != null)
+                {
+                    parent = FindObjectOfType<SoloModeSelectionViewController>();
+                    _logger.Debug("Parent set");
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+            }
+
             if (StaticData.QueueList.Count > 0 && StaticData.TwitchMode)
             {
                 try
                 {
-                    Present(FindObjectOfType<MainMenuViewController>(), false);
+                    Present(parent, false);
                     // ReSharper disable once InvertIf
                     if (StaticData.LastLevelCompletionResults != null)
                     {
-                        _resultsFlowCoordinator.didFinishEvent += HandleResultsFlowCoordinatorDidFinish;
-                        _resultsFlowCoordinator.Present(_levelRequestNavigationController, StaticData.LastLevelCompletionResults, StaticData.LastLevelPlayed,
-                            GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
+                        ShowResults(_levelRequestNavigationController);
                     }
                 }
                 catch (Exception ex)
@@ -252,18 +269,28 @@ namespace TwitchIntegrationPlugin.UI
             }
             else
             {
-                FindObjectOfType<StandardLevelSelectionFlowCoordinator>().Present(FindObjectOfType<MainMenuViewController>(), FindObjectOfType<LevelCollectionsForGameplayModes>().GetLevels(GameplayMode.SoloStandard), GameplayMode.SoloStandard);
-                _resultsFlowCoordinator = Resources.FindObjectsOfTypeAll<ResultsFlowCoordinator>().First();
+                FindObjectOfType<StandardLevelSelectionFlowCoordinator>().Present(parent, FindObjectOfType<LevelCollectionsForGameplayModes>().GetLevels(GameplayMode.SoloStandard), GameplayMode.SoloStandard);
                 // ReSharper disable once InvertIf
                 if (StaticData.LastLevelCompletionResults != null)
                 {
                     _logger.Debug("Presenting Results");
-                    _resultsFlowCoordinator.didFinishEvent += HandleResultsFlowCoordinatorDidFinish;
-                    _resultsFlowCoordinator.Present(FindObjectOfType<StandardLevelSelectionNavigationController>(), StaticData.LastLevelCompletionResults, StaticData.LastLevelPlayed,
-                        GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
+                    ShowResults(FindObjectOfType<StandardLevelSelectionNavigationController>());
                 }
             }
             
+        }
+
+        private void ShowResults(VRUIViewController parentViewController)
+        {
+            if (_resultsFlowCoordinator == null)
+            {
+                _resultsFlowCoordinator = Resources.FindObjectsOfTypeAll<ResultsFlowCoordinator>().First();
+            }
+            _resultsFlowCoordinator.didFinishEvent += HandleResultsFlowCoordinatorDidFinish;
+            _resultsFlowCoordinator.Present(parentViewController, StaticData.LastLevelCompletionResults, StaticData.LastLevelPlayed,
+                GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
+            StaticData.LastLevelCompletionResults = null;
+            StaticData.DidStartFromQueue = false;
         }
 
         public IEnumerator WaitForResults()
@@ -275,7 +302,6 @@ namespace TwitchIntegrationPlugin.UI
 
             results.continueButtonPressedEvent += delegate(ResultsViewController viewController)
             {
-
                 try
                 {
                     _logger.Debug("Results!");
@@ -288,8 +314,9 @@ namespace TwitchIntegrationPlugin.UI
                     FindObjectOfType<SoloModeSelectionViewController>().DismissModalViewController(null, true);
                     FindObjectOfType<StandardLevelSelectionFlowCoordinator>().Finish();
 
-                    Present(FindObjectOfType<MainMenuViewController>(), false);
-
+                    Present(FindObjectOfType<MainMenuViewController>(), true);
+                    StaticData.LastLevelCompletionResults = null;
+                    StaticData.DidStartFromQueue = false;
                 }
                 catch (Exception e)
                 {
