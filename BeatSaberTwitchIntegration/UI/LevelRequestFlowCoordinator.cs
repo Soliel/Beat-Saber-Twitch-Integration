@@ -12,6 +12,7 @@ namespace TwitchIntegrationPlugin.UI
     public class LevelRequestFlowCoordinator : FlowCoordinator
     {
         private MenuSceneSetupData _menuSceneSetupData;
+        private MainGameSceneSetupData _mainGameSceneSetupData;
         private ResultsFlowCoordinator _resultsFlowCoordinator;
         private LevelRequestNavigationController _levelRequestNavigationController;
         private RequestInfoViewController _requestInfoViewController;
@@ -20,22 +21,21 @@ namespace TwitchIntegrationPlugin.UI
         private TwitchIntegrationUi _ui;
         private QueuedSong _song;
         private CustomLevel _customLevel;
-        private IStandardLevelDifficultyBeatmap _levelPlayed;
         private NLog.Logger _logger;
 
         private bool _initialized;
 
         public event Action DidFinishEvent;
 
-        public void Present(VRUIViewController parentViewController)
+        public void Present(VRUIViewController parentViewController, bool fromDebug)
         {
             _ui = TwitchIntegrationUi.Instance;
             _logger = LogManager.GetCurrentClassLogger();
-            DontDestroyOnLoad(this);
 
             try
             {
                 _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupData>().First();
+                _mainGameSceneSetupData = Resources.FindObjectsOfTypeAll<MainGameSceneSetupData>().First();
                 _resultsFlowCoordinator = Resources.FindObjectsOfTypeAll<ResultsFlowCoordinator>().First();
                 if (_levelRequestNavigationController == null)
                 {
@@ -84,6 +84,7 @@ namespace TwitchIntegrationPlugin.UI
 
             _levelRequestNavigationController.PushViewController(_requestInfoViewController, true);
 
+            if (!fromDebug) return; //Loading song preview arrests control from the results controller, causing it to display improperly. 
             CheckQueueAndUpdate();
         }
 
@@ -128,24 +129,15 @@ namespace TwitchIntegrationPlugin.UI
 
         private void HandleDetailViewControllerDidPressPlayButton(StandardLevelDetailViewController viewController)
         {
-            //I don't think this can happen outside of transitioning to a scene. Oh well.
-            if (viewController.isRebuildingHierarchy)
-            {
-                var completionResults = _menuSceneSetupData.levelCompletionResults;
-                if (completionResults == null) return;
-                var difficultyLevel = viewController.difficultyLevel;
-                _resultsFlowCoordinator.didFinishEvent += HandleResultsFlowCoordinatorDidFinish;
-                _resultsFlowCoordinator.Present(_levelRequestNavigationController, completionResults, difficultyLevel,
-                    GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
-            }
-            else
-            {
-                StaticData.DidStartFromQueue = true;
-                _levelPlayed = viewController.difficultyLevel;
-                StaticData.QueueList.RemoveAt(0);
-                Finish();
-                StartLevel();
-            }
+            StaticData.LastLevelCompletionResults = null;
+            StaticData.DidStartFromQueue = true;
+            StaticData.LastLevelPlayed = viewController.difficultyLevel;
+            StaticData.QueueList.RemoveAt(0);
+            Finish();
+
+            _mainGameSceneSetupData.Init(_levelDetailViewController.difficultyLevel, GameplayOptions.defaultOptions, GameplayMode.SoloStandard, 0f);
+            _mainGameSceneSetupData.didFinishEvent += HandleMainGameSceneDidFinish;
+            _mainGameSceneSetupData.TransitionToScene(0.7f);
         }
 
         private void HandleResultsFlowCoordinatorDidFinish()
@@ -155,10 +147,11 @@ namespace TwitchIntegrationPlugin.UI
             _levelDetailViewController.RefreshContent();
         }
 
-        private void StartLevel()
+        private void HandleMainGameSceneDidFinish(MainGameSceneSetupData mainGameSceneSetupData, LevelCompletionResults levelCompletionResults)
         {
-            _menuSceneSetupData.StartLevel(_levelDetailViewController.difficultyLevel, GameplayOptions.defaultOptions,
-                GameplayMode.SoloStandard);
+            StaticData.LastLevelCompletionResults = levelCompletionResults;
+            mainGameSceneSetupData.didFinishEvent -= HandleMainGameSceneDidFinish;
+            _menuSceneSetupData.TransitionToScene(0.7f);
         }
 
         private void HandleDidPressSkipButton()
@@ -235,6 +228,7 @@ namespace TwitchIntegrationPlugin.UI
             StartCoroutine(StaticData.DidStartFromQueue ? WaitForMenu() : WaitForResults());
         }
 
+        //This essentially rebuilds the UI Hiearchy without using a unity scene. 
         public IEnumerator WaitForMenu()
         {
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<MainMenuViewController>().Any());
@@ -242,13 +236,12 @@ namespace TwitchIntegrationPlugin.UI
             {
                 try
                 {
-                    Present(FindObjectOfType<MainMenuViewController>());
-                    var completionResults = _menuSceneSetupData.levelCompletionResults;
+                    Present(FindObjectOfType<MainMenuViewController>(), false);
                     // ReSharper disable once InvertIf
-                    if (completionResults != null)
+                    if (StaticData.LastLevelCompletionResults != null)
                     {
                         _resultsFlowCoordinator.didFinishEvent += HandleResultsFlowCoordinatorDidFinish;
-                        _resultsFlowCoordinator.Present(_levelRequestNavigationController, completionResults, _levelPlayed,
+                        _resultsFlowCoordinator.Present(_levelRequestNavigationController, StaticData.LastLevelCompletionResults, StaticData.LastLevelPlayed,
                             GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
                     }
                 }
@@ -260,13 +253,13 @@ namespace TwitchIntegrationPlugin.UI
             else
             {
                 FindObjectOfType<StandardLevelSelectionFlowCoordinator>().Present(FindObjectOfType<MainMenuViewController>(), FindObjectOfType<LevelCollectionsForGameplayModes>().GetLevels(GameplayMode.SoloStandard), GameplayMode.SoloStandard);
-                var completionResults = _menuSceneSetupData.levelCompletionResults;
+                _resultsFlowCoordinator = Resources.FindObjectsOfTypeAll<ResultsFlowCoordinator>().First();
                 // ReSharper disable once InvertIf
-                if (completionResults != null)
+                if (StaticData.LastLevelCompletionResults != null)
                 {
                     _logger.Debug("Presenting Results");
                     _resultsFlowCoordinator.didFinishEvent += HandleResultsFlowCoordinatorDidFinish;
-                    _resultsFlowCoordinator.Present(FindObjectOfType<StandardLevelSelectionNavigationController>(), completionResults, _levelPlayed,
+                    _resultsFlowCoordinator.Present(FindObjectOfType<StandardLevelSelectionNavigationController>(), StaticData.LastLevelCompletionResults, StaticData.LastLevelPlayed,
                         GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
                 }
             }
@@ -295,7 +288,7 @@ namespace TwitchIntegrationPlugin.UI
                     FindObjectOfType<SoloModeSelectionViewController>().DismissModalViewController(null, true);
                     FindObjectOfType<StandardLevelSelectionFlowCoordinator>().Finish();
 
-                    Present(FindObjectOfType<MainMenuViewController>());
+                    Present(FindObjectOfType<MainMenuViewController>(), false);
 
                 }
                 catch (Exception e)

@@ -130,7 +130,7 @@ namespace TwitchIntegrationPlugin.UI
                         {
                             LevelRequestFlowCoordinator = new GameObject("Twitch Integration Coordinator").AddComponent<LevelRequestFlowCoordinator>();
                         }
-                        LevelRequestFlowCoordinator.Present(MainMenuViewController);
+                        LevelRequestFlowCoordinator.Present(MainMenuViewController, true);
                     }
                     catch(Exception e)
                     {

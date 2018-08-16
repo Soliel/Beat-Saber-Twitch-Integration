@@ -60,7 +60,7 @@ namespace TwitchIntegrationPlugin.UI
                 ((RectTransform)_skipButton.transform).anchorMin = new Vector2(0.6f, 0.1f);
                 ((RectTransform)_skipButton.transform).anchorMax = new Vector2(1f, 0.2f);
                 ((RectTransform)_skipButton.transform).sizeDelta = new Vector2(0f, 0f);
-                ((RectTransform)_skipButton.transform).anchoredPosition = new Vector2(0f, 0f);
+                ((RectTransform)_skipButton.transform).anchoredPosition = new Vector2(-5f, 0f);
                 _ui.SetButtonText(ref _skipButton, "Skip");
                 _skipButton.onClick.AddListener(OnSkipButtonPressed);
             }
@@ -71,7 +71,7 @@ namespace TwitchIntegrationPlugin.UI
                 ((RectTransform)_downloadButton.transform).anchorMin = new Vector2(0f, 0.1f);
                 ((RectTransform)_downloadButton.transform).anchorMax = new Vector2(0.4f, 0.2f);
                 ((RectTransform)_downloadButton.transform).sizeDelta = new Vector2(0f, 0f);
-                ((RectTransform)_downloadButton.transform).anchoredPosition = new Vector2(0f, 0f);
+                ((RectTransform)_downloadButton.transform).anchoredPosition = new Vector2(5f, 0f);
                 _ui.SetButtonText(ref _downloadButton, "Download");
                 _downloadButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = _downloadButton.GetComponentInChildren<TextMeshProUGUI>().fontSize - 0.3f;
                 _downloadButton.onClick.AddListener(OnDownloadButtonPressed);
