@@ -96,8 +96,6 @@
     <Compile Include="RequestQueueController.cs" />
     <Compile Include="RequestQueueTableCell.cs" />
     <Compile Include="StaticData.cs" />
-    <Compile Include="TwitchIntegration.cs" />
-    <Compile Include="UI\LevelRequestMasterViewController.cs" />
     <Compile Include="TwitchIntegrationPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UI\RequestInfoViewController.cs" />

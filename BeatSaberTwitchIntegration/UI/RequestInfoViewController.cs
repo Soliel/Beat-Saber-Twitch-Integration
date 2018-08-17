@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NLog;
 using SongLoaderPlugin;
+using SongLoaderPlugin.OverrideClasses;
 using TMPro;
 using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip;
 using UnityEngine;
@@ -27,6 +29,7 @@ namespace TwitchIntegrationPlugin.UI
         private Logger _logger;
         private string _songTitle;
         private string _requestorNameString;
+        private QueuedSong _queuedSong;
 
         public event Action SkipButtonPressed;
         public event Action DownloadButtonpressed;
@@ -107,7 +110,7 @@ namespace TwitchIntegrationPlugin.UI
             DownloadButtonpressed?.Invoke();
         }
 
-        public IEnumerator DownloadSongCoroutine(QueuedSong song, Action callback)
+        public IEnumerator DownloadSongCoroutine(QueuedSong song)
         {
             _ui.SetButtonText(ref _downloadButton, "Downloading...");
             _downloadButton.interactable = false;
@@ -172,18 +175,8 @@ namespace TwitchIntegrationPlugin.UI
                 try
                 {
                     SongLoader.Instance.RefreshSongs();
-                    SongLoader.SongsLoadedEvent += (songLoader, list) =>
-                    {
-                        _downloadButton.interactable = true;
-                        if (DoesSongExist(song))
-                        {
-                            _ui.SetButtonText(ref _downloadButton, "Downloaded");
-                            callback();
-                        }
-                        else
-                            _ui.SetButtonText(ref _downloadButton, "Download");
-
-                    };
+                    _queuedSong = song;
+                    SongLoader.SongsLoadedEvent += OnSongsLoaded;
                 }
                 catch (Exception e)
                 {
@@ -194,6 +187,20 @@ namespace TwitchIntegrationPlugin.UI
             }
         }
 
+        private void OnSongsLoaded(SongLoader songLoader, List<CustomLevel> list)
+        {
+            SongLoader.SongsLoadedEvent -= OnSongsLoaded;
+            _downloadButton.interactable = true;
+            if (DoesSongExist(_queuedSong))
+            {
+                _ui.SetButtonText(ref _downloadButton, "Downloaded");
+            }
+            else
+                _ui.SetButtonText(ref _downloadButton, "Download");
+
+            _queuedSong = null;
+            FindObjectOfType<LevelRequestFlowCoordinator>().CheckQueueAndUpdate(); //This kinda goes against the purpose of a flow controller, but I just want it to work.
+        }
 
         public void SetDownloadButtonText(string text)
         {
@@ -215,9 +222,8 @@ namespace TwitchIntegrationPlugin.UI
             try
             {
                 return SongLoader.CustomLevels.FirstOrDefault(x => x.songName == song.SongName &&
-                                                                   x.songAuthorName == song.AuthName &&
                                                                    x.beatsPerMinute == song.Bpm &&
-                                                                   x.songSubName == song.SongSubName) != null;
+                                                                   x.songAuthorName == song.AuthName) != null;
             }
             catch (Exception e)
             {

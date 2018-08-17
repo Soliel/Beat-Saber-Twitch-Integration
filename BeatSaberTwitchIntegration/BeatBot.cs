@@ -440,6 +440,7 @@ namespace TwitchIntegrationPlugin
                     StaticData.QueueList.Add(qs);
                     //StaticData.songQueue.Enqueue((QueuedSong)StaticData.queueList[StaticData.queueList.Count - 1]);
                     SendMessage(requestedBy + " added \"" + qs.SongName + "\", uploaded by " + qs.AuthName + " to queue!");
+                    StaticData.SongAddedToQueueEvent.Invoke(qs);
                 }
             }
         }

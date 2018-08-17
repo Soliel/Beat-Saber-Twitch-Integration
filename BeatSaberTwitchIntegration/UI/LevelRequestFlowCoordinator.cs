@@ -157,6 +157,9 @@ namespace TwitchIntegrationPlugin.UI
 
         private void HandleDidPressSkipButton()
         {
+            _levelRequestNavigationController.ClearChildControllers();
+            _requestInfoViewController.Init("Default song", "Default Requestor");
+            _levelRequestNavigationController.PushViewController(_requestInfoViewController);
             StaticData.QueueList.RemoveAt(0);
             _song = (QueuedSong) StaticData.QueueList[0];
             CheckQueueAndUpdate();
@@ -164,10 +167,10 @@ namespace TwitchIntegrationPlugin.UI
 
         private void HandleDidPressDownloadButton()
         {
-            StartCoroutine(_requestInfoViewController.DownloadSongCoroutine(_song, CheckQueueAndUpdate));
+            StartCoroutine(_requestInfoViewController.DownloadSongCoroutine(_song));
         }
 
-        private void CheckQueueAndUpdate()
+        public void CheckQueueAndUpdate()
         {
             if (StaticData.QueueList.Count <= 0) return;
             _song = (QueuedSong) StaticData.QueueList[0];
@@ -185,7 +188,7 @@ namespace TwitchIntegrationPlugin.UI
 
             _customLevel = SongLoader.CustomLevels.Find(x => x.songName == _song.SongName &&
                                                              x.songAuthorName == _song.AuthName &&
-                                                             x.songSubName == _song.SongSubName);
+                                                             x.beatsPerMinute == _song.Bpm);
 
             SongLoader.Instance.LoadAudioClipForLevel(_customLevel, (level) =>
             {

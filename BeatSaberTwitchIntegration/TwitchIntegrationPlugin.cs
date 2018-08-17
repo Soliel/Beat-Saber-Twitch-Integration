@@ -9,7 +9,7 @@ namespace TwitchIntegrationPlugin
     {
 
         public string Name => "Beat Saber Twitch Integration";
-        public string Version => "v1.1_bs-0.11.1";
+        public string Version => "2.0_bs-0.11.1";
         private readonly BeatBot _bot = new BeatBot();
         //private NLog.Logger _logger; 
 

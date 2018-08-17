@@ -25,7 +25,6 @@ namespace TwitchIntegrationPlugin.UI
 
         public static List<Sprite> Icons = new List<Sprite>();
 
-        public LevelRequestMasterViewController TwitchIntegrationViewController;
         public LevelRequestFlowCoordinator LevelRequestFlowCoordinator { get; set; }
 
         public static Dictionary<string, Sprite> CachedSprites = new Dictionary<string, Sprite>();
