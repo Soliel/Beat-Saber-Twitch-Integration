@@ -1,7 +1,7 @@
 using System;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
-namespace ICSharpCode.SharpZipLib.Zip.Compression
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression
 {
 	class InflaterDynHeader
 	{

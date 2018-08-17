@@ -1,4 +1,4 @@
-namespace ICSharpCode.SharpZipLib.Core
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Core
 {
 	/// <summary>
 	/// WindowsPathUtils provides simple utilities for handling windows paths.

@@ -9,7 +9,12 @@ namespace TwitchIntegrationPlugin
     public static class StaticData
     {
         public static bool TwitchMode { get; set; }
-        public static ArrayList queueList = new ArrayList();
-        public static bool didStartFromQueue = false;
+        public static ArrayList QueueList = new ArrayList();
+        public static bool DidStartFromQueue = false;
+        public static LevelCompletionResults LastLevelCompletionResults;
+        public static IStandardLevelDifficultyBeatmap LastLevelPlayed;
+
+        //HERE YA GO RQ
+        public static Action<QueuedSong> SongAddedToQueueEvent;
     }
 }

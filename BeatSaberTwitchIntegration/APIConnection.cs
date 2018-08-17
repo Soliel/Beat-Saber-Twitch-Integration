@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
@@ -8,35 +9,28 @@ using System.Text;
 
 namespace TwitchIntegrationPlugin
 {
-    class APIConnection
+    class ApiConnection
     {
-        private const String BEATSAVER = "https://beatsaver.com/";
+        private const string Beatsaver = "https://beatsaver.com/";
 
         public static QueuedSong GetSongFromBeatSaver(Boolean isTextSearch, String queryString, String requestedBy)
         {
-            String apiPath;
-            if (isTextSearch)
-            {
-                apiPath = "{0}/api/songs/search/all/{1}";
-            }
-            else
-                apiPath = "{0}/api/songs/detail/{1}";
+            var apiPath = isTextSearch ? "{0}/api/songs/search/all/{1}" : "{0}/api/songs/detail/{1}";
 
-            HttpWebRequest webrequest = (HttpWebRequest)WebRequest.Create(String.Format(apiPath, BEATSAVER, queryString));
+            var webrequest = (HttpWebRequest)WebRequest.Create(String.Format(apiPath, Beatsaver, queryString));
             webrequest.Method = "GET";
             webrequest.ContentType = "application/json";
             ServicePointManager.ServerCertificateValidationCallback = MyRemoteCertificateValidationCallback;
-            HttpWebResponse webresponse = (HttpWebResponse)webrequest.GetResponse();
-            Encoding enc = Encoding.GetEncoding("utf-8");
-            StreamReader responseStream = new StreamReader(webresponse.GetResponseStream(), enc);
-            string result = string.Empty;
-            result = responseStream.ReadToEnd();
+            var webresponse = (HttpWebResponse)webrequest.GetResponse();
+            var enc = Encoding.GetEncoding("utf-8");
+            var responseStream = new StreamReader(webresponse.GetResponseStream() ?? throw new NoNullAllowedException(), enc);
+            var result = responseStream.ReadToEnd();
             webresponse.Close();
 
             if (result == "{\"songs\":[],\"total\":0}")
                 return null;
 
-            JSONNode node = JSON.Parse(result);
+            var node = JSON.Parse(result);
 
             if (isTextSearch)
             {
@@ -49,7 +43,7 @@ namespace TwitchIntegrationPlugin
                 string downloadUrl = node["songs"][0]["downloadUrl"];
                 string coverUrl = node["songs"][0]["coverUrl"];
                 return new QueuedSong(songName, beatName, authorName, bpm, key, songSubName, downloadUrl, requestedBy, coverUrl);
-            } 
+            }
             else
             {
                 string songName = node["song"]["songName"];
@@ -64,31 +58,27 @@ namespace TwitchIntegrationPlugin
             }
         }
 
-        private static bool MyRemoteCertificateValidationCallback(System.Object sender,
+        private static bool MyRemoteCertificateValidationCallback(object sender,
         X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            bool isOk = true;
+            var isOk = true;
             // If there are errors in the certificate chain,
             // look at each error to determine the cause.
-            if (sslPolicyErrors != SslPolicyErrors.None)
+            if (sslPolicyErrors == SslPolicyErrors.None) return true;
+            foreach (var t in chain.ChainStatus)
             {
-                for (int i = 0; i < chain.ChainStatus.Length; i++)
+                if (t.Status == X509ChainStatusFlags.RevocationStatusUnknown)
                 {
-                    if (chain.ChainStatus[i].Status == X509ChainStatusFlags.RevocationStatusUnknown)
-                    {
-                        continue;
-                    }
-                    chain.ChainPolicy.RevocationFlag = X509RevocationFlag.EntireChain;
-                    chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
-                    chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
-                    chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllFlags;
-                    bool chainIsValid = chain.Build((X509Certificate2)certificate);
-                    if (!chainIsValid)
-                    {
-                        isOk = false;
-                        break;
-                    }
+                    continue;
                 }
+                chain.ChainPolicy.RevocationFlag = X509RevocationFlag.EntireChain;
+                chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
+                chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
+                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllFlags;
+                var chainIsValid = chain.Build((X509Certificate2)certificate);
+                if (chainIsValid) continue;
+                isOk = false;
+                break;
             }
             return isOk;
         }

@@ -1,6 +1,6 @@
 using System;
 
-namespace ICSharpCode.SharpZipLib.Core
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Core
 {
 	#region EventArgs
 	/// <summary>

@@ -1,6 +1,6 @@
 using System;
 
-namespace ICSharpCode.SharpZipLib.Checksum
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Checksum
 {
 	/// <summary>
 	/// CRC-32 with reversed data and unreversed output

@@ -5,19 +5,20 @@ using System.Text;
 using System.Reflection;
 using UnityEngine;
 using NLog;
+using TwitchIntegrationPlugin.UI;
 
 namespace TwitchIntegrationPlugin
 {
     class RequestQueueTableCell : StandardLevelListTableCell
     {
-        QueuedSong song;
+        QueuedSong _song;
 
         protected override void Awake()
         {
             base.Awake();
         }
 
-        public void Init(QueuedSong _song)
+        public void Init(QueuedSong song)
         {
             CustomLevelListTableCell cell = GetComponent<CustomLevelListTableCell>();
              
@@ -28,11 +29,11 @@ namespace TwitchIntegrationPlugin
 
             Destroy(cell);
 
-            song = _song;
+            this._song = song;
 
-            songName = song._beatName;
-            author = song._authName;
-            StartCoroutine(TwitchIntegrationUI.LoadSprite(song._coverUrl, this));
+            songName = this._song.BeatName;
+            author = this._song.AuthName;
+            StartCoroutine(TwitchIntegrationUi.LoadSprite(this._song.CoverUrl, this));
         }
     }
 }

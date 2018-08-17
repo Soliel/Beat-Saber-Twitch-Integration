@@ -1,6 +1,4 @@
-using System;
-
-namespace ICSharpCode.SharpZipLib.Zip.Compression
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression
 {
 	/// <summary>
 	/// This class is general purpose class for writing data to a buffer.

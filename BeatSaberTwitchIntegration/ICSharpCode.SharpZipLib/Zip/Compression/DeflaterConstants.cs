@@ -1,6 +1,6 @@
 using System;
 
-namespace ICSharpCode.SharpZipLib.Zip.Compression
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression
 {
 	/// <summary>
 	/// This class contains constants used for deflation.

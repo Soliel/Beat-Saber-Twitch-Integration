@@ -1,6 +1,6 @@
 using System;
 
-namespace ICSharpCode.SharpZipLib.Zip.Compression
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression
 {
 	/// <summary>
 	/// This is the Deflater class.  The deflater class compresses input

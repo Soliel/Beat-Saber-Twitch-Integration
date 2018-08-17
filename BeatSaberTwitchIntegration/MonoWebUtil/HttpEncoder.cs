@@ -30,16 +30,17 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Text;
+
 #if NET_4_0
 using System.Web.Configuration;
 #endif
 
-namespace MonoWebUtil
+namespace TwitchIntegrationPlugin.MonoWebUtil
 {
 #if NET_4_0
 	public

@@ -1,6 +1,6 @@
 using System;
 
-namespace ICSharpCode.SharpZipLib.Zip
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip
 {
 	/// <summary>
 	/// ZipException represents exceptions specific to Zip classes and code.

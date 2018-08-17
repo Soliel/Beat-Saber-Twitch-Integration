@@ -1,6 +1,6 @@
 using System;
 
-namespace ICSharpCode.SharpZipLib.Checksum
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Checksum
 {
 	/// <summary>
 	/// Computes Adler32 checksum for a stream of data. An Adler32

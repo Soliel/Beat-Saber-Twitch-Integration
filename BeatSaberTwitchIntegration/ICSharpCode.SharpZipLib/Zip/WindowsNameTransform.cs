@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Text;
-using ICSharpCode.SharpZipLib.Core;
+using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Core;
 
-namespace ICSharpCode.SharpZipLib.Zip
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip
 {
 	/// <summary>
 	/// WindowsNameTransform transforms <see cref="ZipFile"/> names to windows compatible ones.

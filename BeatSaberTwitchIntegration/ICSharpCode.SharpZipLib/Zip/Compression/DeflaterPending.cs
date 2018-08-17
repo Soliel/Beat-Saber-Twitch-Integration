@@ -1,4 +1,4 @@
-namespace ICSharpCode.SharpZipLib.Zip.Compression
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip.Compression
 {
 	/// <summary>
 	/// This class stores the pending output of the Deflater.

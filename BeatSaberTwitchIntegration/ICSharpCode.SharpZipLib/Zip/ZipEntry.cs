@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace ICSharpCode.SharpZipLib.Zip
+namespace TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip
 {
 	/// <summary>
 	/// Defines known values for the <see cref="HostSystemID"/> property.

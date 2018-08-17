@@ -1,9 +1,7 @@
 ﻿using IllusionPlugin;
-using System;
 using NLog;
+using TwitchIntegrationPlugin.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine;
-using UnityEngine.UI;
 
 namespace TwitchIntegrationPlugin
 {
@@ -11,13 +9,13 @@ namespace TwitchIntegrationPlugin
     {
 
         public string Name => "Beat Saber Twitch Integration";
-        public string Version => "v1.1_bs-0.11.1";
-        BeatBot bot = new BeatBot();
-        private NLog.Logger logger; 
+        public string Version => "2.0_bs-0.11.1";
+        private readonly BeatBot _bot = new BeatBot();
+        //private NLog.Logger _logger; 
 
         public void OnApplicationStart()
         { 
-            bot.Start();
+            _bot.Start();
             StaticData.TwitchMode = false;
 
             var nlogconfig = new NLog.Config.LoggingConfiguration();
@@ -25,38 +23,24 @@ namespace TwitchIntegrationPlugin
             var logfile = new NLog.Targets.FileTarget("logfile") { FileName = "TILog.txt" };
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
 
-            nlogconfig.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
-            nlogconfig.AddRule(LogLevel.Info, LogLevel.Fatal, logfile);
+            nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
+            nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
             LogManager.Configuration = nlogconfig;
-            logger = LogManager.GetCurrentClassLogger();
-        }
-
-        private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
-        {
-        }
-
-        private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
-        {
+            //logger = LogManager.GetCurrentClassLogger();
         }
 
         public void OnApplicationQuit()
         {
-            bot.Exit();
+            _bot.Exit();
         }
 
         public void OnLevelWasLoaded(int level)
         {
-            if (level == 1)
-            {
-                TwitchIntegrationUI.OnLoad();
-                TwitchIntegration.OnLoad(level);
-            }
-            else if (level > 1)
-            {
-                TwitchIntegration.OnLoad(level);
-            }
+            if (SceneManager.GetActiveScene().name != "Menu") return;
 
-            logger.Debug(SceneManager.GetActiveScene().name);
+            TwitchIntegrationUi.OnLoad();
+            //TwitchIntegration.OnLoad(SceneManager.GetActiveScene().name);
+            LevelRequestFlowCoordinator.OnLoad(SceneManager.GetActiveScene().name);
         }
 
         public void OnLevelWasInitialized(int level)
