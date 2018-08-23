@@ -9,9 +9,8 @@ namespace TwitchIntegrationPlugin
     {
 
         public string Name => "Beat Saber Twitch Integration";
-        public string Version => "2.0_bs-0.11.1";
+        public string Version => "2.0.2_bs-0.11.2";
         private readonly BeatBot _bot = new BeatBot();
-        //private NLog.Logger _logger; 
 
         public void OnApplicationStart()
         { 
@@ -26,7 +25,6 @@ namespace TwitchIntegrationPlugin
             nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
             nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
             LogManager.Configuration = nlogconfig;
-            //logger = LogManager.GetCurrentClassLogger();
         }
 
         public void OnApplicationQuit()
@@ -39,7 +37,6 @@ namespace TwitchIntegrationPlugin
             if (SceneManager.GetActiveScene().name != "Menu") return;
 
             TwitchIntegrationUi.OnLoad();
-            //TwitchIntegration.OnLoad(SceneManager.GetActiveScene().name);
             LevelRequestFlowCoordinator.OnLoad(SceneManager.GetActiveScene().name);
         }
 

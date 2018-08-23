@@ -25,7 +25,7 @@ namespace TwitchIntegrationPlugin
         private bool _isModerator;
         private bool _isSubscriber;
         private bool _isBroadcaster;
-        private bool _isAcceptingRequests;
+        //private bool _isAcceptingRequests; No longer needed due to combination with twitch mode button.
 
         private readonly ArrayList _banList = new ArrayList();
 
@@ -128,6 +128,7 @@ namespace TwitchIntegrationPlugin
                                 {
                                     _logger.Info("Responded to twitch ping.");
                                     SendMessage("PONG " + splitInput[1]);
+                                    Thread.Sleep(1750);
                                 }
 
                                 splitInput = inputLine.Split(':');
@@ -136,6 +137,7 @@ namespace TwitchIntegrationPlugin
 
                                 var command = splitInput[2];
                                 OnCommandRecieved(command, _currUser);
+                                Thread.Sleep(1750);
                             }
                         }
                     }
@@ -183,11 +185,10 @@ namespace TwitchIntegrationPlugin
                                 {
                                     for (var i = 0; i < StaticData.QueueList.Count; i++)
                                     {
-                                        if (((QueuedSong)StaticData.QueueList[i]).SongName.Contains(qs.SongName))
-                                        {
-                                            StaticData.QueueList.RemoveAt(i);
-                                            SendMessage("Removed \"" + qs.SongName + "\" from the queue");
-                                        }
+                                        if (!((QueuedSong) StaticData.QueueList[i]).SongName.Contains(qs.SongName))
+                                            continue;
+                                        StaticData.QueueList.RemoveAt(i);
+                                        SendMessage("Removed \"" + qs.SongName + "\" from the queue");
                                     }
                                 }
                                 else
@@ -209,7 +210,9 @@ namespace TwitchIntegrationPlugin
                             SendMessage("Missing song ID");
 
                     }
-                    else if (command.StartsWith("!close"))
+
+                    //This block is unnessecary now that queue has been moved to rely on twitch button.
+                    /*else if (command.StartsWith("!close"))
                     {
                         if (_isAcceptingRequests)
                         {
@@ -232,7 +235,8 @@ namespace TwitchIntegrationPlugin
                         {
                             SendMessage("The queue is already open.");
                         }
-                    }
+                    }*/
+
                     else if (command.StartsWith("!randomize"))
                     {
                         var randomizer = new Random();
@@ -287,7 +291,7 @@ namespace TwitchIntegrationPlugin
             }
         }
 
-        private void BasicCommands(String command, String requestedBy)
+        private void BasicCommands(string command, string requestedBy)
         {
             if (command.StartsWith("!bsr"))
             {
@@ -334,9 +338,9 @@ namespace TwitchIntegrationPlugin
             }
         }
 
-        public void AddRequestedSongToQueue(Boolean isTextSearch, String queryString, String requestedBy)
+        public void AddRequestedSongToQueue(bool isTextSearch, string queryString, string requestedBy)
         {
-            if (!_isAcceptingRequests)
+            if (!StaticData.TwitchMode)
             {
                 if (!_isModerator && !_isBroadcaster)
                 {
@@ -358,7 +362,7 @@ namespace TwitchIntegrationPlugin
             var isAlreadyBanned = false;
 
             // Check to see if song is banned.
-            foreach (String banValue in _banList)
+            foreach (string banValue in _banList)
             {
                 if (queryString.Contains("-"))
                 {
@@ -386,11 +390,9 @@ namespace TwitchIntegrationPlugin
 
                     foreach (QueuedSong q in StaticData.QueueList)
                     {
-                        if (q.SongName.Contains(qs.SongName))
-                        {
-                            songExistsInQueue = true;
-                            break;
-                        }
+                        if (!q.SongName.Contains(qs.SongName)) continue;
+                        songExistsInQueue = true;
+                        break;
                     }
 
                     foreach (QueuedSong q in StaticData.QueueList)
@@ -474,7 +476,7 @@ namespace TwitchIntegrationPlugin
                 SendMessage("BeatSaber queue was empty");
         }
 
-        public void DisplaySongsInQueue(ArrayList queue, Boolean isBanlist)
+        public void DisplaySongsInQueue(ArrayList queue, bool isBanlist)
         {
             var curr = "Current song list: ";
             var isEmptyMsg = "No songs in the queue";
@@ -504,21 +506,17 @@ namespace TwitchIntegrationPlugin
 
         private void BlacklistSong(QueuedSong song)
         {
-            if (song.Id != null)
+            if (song.Id == null) return;
+            if (_banList.Contains(song.Id))
             {
-                if (_banList.Contains(song.Id))
-                {
-                    SendMessage("Song already on banlist");
-                }
-                else
-                {
-                    _banList.Add(song.Id);
-                    if (File.Exists("Plugins\\Config\\song_blacklist.txt"))
-                    {
-                        File.AppendAllText("Plugins\\Config\\song_blacklist.txt", song.Id + Environment.NewLine);
-                        SendMessage("Added \"" + song.SongName + "\", uploaded by " + song.AuthName + " to banlist!");
-                    }
-                }
+                SendMessage("Song already on banlist");
+            }
+            else
+            {
+                _banList.Add(song.Id);
+                if (!File.Exists("Plugins\\Config\\song_blacklist.txt")) return;
+                File.AppendAllText("Plugins\\Config\\song_blacklist.txt", song.Id + Environment.NewLine);
+                SendMessage("Added \"" + song.SongName + "\", uploaded by " + song.AuthName + " to banlist!");
             }
         }
 
@@ -596,20 +594,18 @@ namespace TwitchIntegrationPlugin
 
         private void ProcessIrcMessage(string message)
         {
-            if (message.Contains("PRIVMSG"))
-            {
-                var splitInput = message.Split(';');
+            if (!message.Contains("PRIVMSG")) return;
+            var splitInput = message.Split(';');
 
-                _isBroadcaster = splitInput[0].Contains("broadcaster");
-                _isModerator = splitInput[5].Contains("mod=1");
-                _isSubscriber = splitInput[7].Contains("subscriber=1");
-                _currUser = splitInput[2].Split('=')[1];
+            _isBroadcaster = splitInput[0].Contains("broadcaster");
+            _isModerator = splitInput[5].Contains("mod=1");
+            _isSubscriber = splitInput[7].Contains("subscriber=1");
+            _currUser = splitInput[2].Split('=')[1];
 
-                //logger.Debug(message);
-                //logger.Debug("Is Moderator: " + isModerator);
-                //logger.Debug("Is Subscriber: " + isSubscriber);
-                //logger.Debug("Is Broadcaster: " + isBroadcaster);
-            }
+            //logger.Debug(message);
+            //logger.Debug("Is Moderator: " + isModerator);
+            //logger.Debug("Is Subscriber: " + isSubscriber);
+            //logger.Debug("Is Broadcaster: " + isBroadcaster);
 
         }
 
@@ -631,7 +627,7 @@ namespace TwitchIntegrationPlugin
         {
             try
             {
-                return Int32.Parse(value);
+                return int.Parse(value);
             }
             catch (FormatException)
             {
@@ -640,7 +636,7 @@ namespace TwitchIntegrationPlugin
             }
         }
 
-        private void SendMessage(String message)
+        private void SendMessage(string message)
         {
             if (message.Contains("PASS") || message.Contains("NICK") || message.Contains("JOIN #") || message.Contains("CAP REQ") || message.Contains("PONG"))
             {
