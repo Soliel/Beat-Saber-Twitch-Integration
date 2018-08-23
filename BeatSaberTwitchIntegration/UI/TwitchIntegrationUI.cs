@@ -83,8 +83,8 @@ namespace TwitchIntegrationPlugin.UI
 
             try
             {
-                ((RectTransform) twitchModeButton.transform).anchoredPosition = new Vector2(4f, 49f);
-                ((RectTransform) twitchModeButton.transform).sizeDelta = new Vector2(25f, 25f);
+                ((RectTransform) twitchModeButton.transform).anchoredPosition = new Vector2(4f, 62f);
+                ((RectTransform) twitchModeButton.transform).sizeDelta = new Vector2(25f, 15f);
 
                 SetButtonText(ref twitchModeButton, (StaticData.TwitchMode) ? "Twitch Mode: ON" : "Twitch Mode: OFF");
                 //SetButtonIcon(ref _twitchModeButton, icons.First(x => (x.name == "SettingsIcon")));
@@ -114,10 +114,10 @@ namespace TwitchIntegrationPlugin.UI
 
             try
             {
-                ((RectTransform) debugButton.transform).anchoredPosition = new Vector2(4f, 38f);
+                ((RectTransform) debugButton.transform).anchoredPosition = new Vector2(4f, 51f);
                 ((RectTransform) debugButton.transform).sizeDelta = new Vector2(25f, 10f);
 
-                SetButtonText(ref debugButton, "Twitch Debug");
+                SetButtonText(ref debugButton, "Request Queue");
 
                 //SetButtonIcon(ref _debugButton, icons.First(x => (x.name == "SettingsIcon")));
 
@@ -151,7 +151,7 @@ namespace TwitchIntegrationPlugin.UI
             }
 
             var button = Instantiate(_backButtonInstance, parent, false);
-            DestroyImmediate(button.GetComponent<GameEventOnUIButtonClick>());
+            DestroyImmediate(button.GetComponent<SignalOnUIButtonClick>());
             button.onClick = new Button.ButtonClickedEvent();
 
             return button;
@@ -171,7 +171,7 @@ namespace TwitchIntegrationPlugin.UI
             }
 
             var btn = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonTemplate)), parent, false);
-            DestroyImmediate(btn.GetComponent<GameEventOnUIButtonClick>());
+            DestroyImmediate(btn.GetComponent<SignalOnUIButtonClick>());
             btn.onClick = new Button.ButtonClickedEvent();
 
             return btn;

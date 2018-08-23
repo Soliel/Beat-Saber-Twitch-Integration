@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reflection;
-using UnityEngine;
-using NLog;
+﻿using System.Reflection;
 using TwitchIntegrationPlugin.UI;
 
 namespace TwitchIntegrationPlugin
 {
-    class RequestQueueTableCell : StandardLevelListTableCell
+    public class RequestQueueTableCell : StandardLevelListTableCell
     {
-        QueuedSong _song;
+        private QueuedSong _song;
 
         protected override void Awake()
         {
@@ -20,9 +14,9 @@ namespace TwitchIntegrationPlugin
 
         public void Init(QueuedSong song)
         {
-            CustomLevelListTableCell cell = GetComponent<CustomLevelListTableCell>();
+            var cell = GetComponent<StandardLevelListTableCell>();
              
-            foreach (FieldInfo info in cell.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
+            foreach (var info in cell.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
             {
                 info.SetValue(this, info.GetValue(cell));
             }
