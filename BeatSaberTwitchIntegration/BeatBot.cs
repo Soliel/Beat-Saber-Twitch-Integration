@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -136,7 +136,7 @@ namespace TwitchIntegrationPlugin
                                 if (2 >= splitInput.Length) continue;
 
                                 var command = splitInput[2];
-                                OnCommandRecieved(command, _currUser);
+                                OnCommandReceived(command, _currUser);
                                 Thread.Sleep(1750);
                             }
                         }
@@ -158,7 +158,7 @@ namespace TwitchIntegrationPlugin
             } while (_retry);
         }
 
-        public void OnCommandRecieved(string command, string requestedBy)
+        private void OnCommandReceived(string command, string requestedBy)
         {
             var parsedCommand = command.Split();
             if (_isModerator || _isBroadcaster)
