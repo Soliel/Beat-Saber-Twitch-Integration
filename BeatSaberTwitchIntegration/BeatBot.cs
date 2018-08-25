@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Xml;
 using NLog;
+using SimpleJSON;
 
 
 namespace TwitchIntegrationPlugin
@@ -36,15 +37,20 @@ namespace TwitchIntegrationPlugin
 
         private StreamWriter _writer;
 
+        private void CreateConfigDirectory()
+        {
+            if (Directory.Exists("Plugins\\Config")) return;
+
+            _logger.Debug("Creating Directory 'Plugins\\Config'");
+            Directory.CreateDirectory("Plugins\\Config");
+        }
+
         public BeatBot()
         {
             _logger = LogManager.GetCurrentClassLogger();
 
-            if (!Directory.Exists("Plugins\\Config"))
-            {
-                _logger.Debug("Creating Directory 'Plugins\\Config'");
-                Directory.CreateDirectory("Plugins\\Config");
-            }
+            CreateConfigDirectory();
+            LoadQueue();
 
             if (!File.Exists("Plugins\\Config\\song_blacklist.txt"))
             {
@@ -82,6 +88,79 @@ namespace TwitchIntegrationPlugin
             _exit = true;
             _botThread.Abort();
             _botThread.Join();
+
+            SaveQueue();
+        }
+
+        /**
+         * load queue from song_queue.txt
+         */
+        private void LoadQueue()
+        {
+            // create config directory if not exists
+            CreateConfigDirectory();
+
+            // ignore load if file doesn't exists
+            if (!File.Exists("Plugins\\Config\\song_queue.txt")) return;
+
+            // get json from file
+            var file = new StreamReader("Plugins\\Config\\song_queue.txt");
+            var json = "";
+            string line;
+            while ((line = file.ReadLine()) != null)
+            {
+                json += line;
+            }
+
+            var node = JSON.Parse(json);
+            for (var i = 0; i < node.Count; i++)
+            {
+                var song = node[i];
+                var qs = new QueuedSong(
+                    song["songName"],
+                    song["name"],
+                    song["authorName"],
+                    song["bpm"],
+                    song["id"],
+                    song["songSubName"],
+                    song["downloadUrl"],
+                    song["requestedBy"],
+                    song["coverUrl"]
+                );
+                AddQueueSong(qs, false);
+            }
+
+            file.Close();
+        }
+
+        /**
+         * save queue to song_queue.txt
+         */
+        private void SaveQueue()
+        {
+            // create config directory if not exists
+            CreateConfigDirectory();
+
+            // delete old song_queue.txt
+            if (File.Exists("Plugins\\Config\\song_queue.txt"))
+            {
+                File.Delete("Plugins\\Config\\song_queue.txt");
+            }
+
+            // build json string -> todo json class?
+            var json = "";
+            foreach (var song in StaticData.QueueList)
+            {
+                if (json.Length > 0)
+                {
+                    json += ", ";
+                }
+
+                json += song.ToString();
+            }
+
+            // save into file
+            File.WriteAllText("Plugins\\Config\\song_queue.txt", "[" + json + "]");
         }
 
         public void Initiate()
@@ -114,8 +193,7 @@ namespace TwitchIntegrationPlugin
                         SendMessage("CAP REQ :twitch.tv/commands");
                         SendMessage("CAP REQ :twitch.tv/tags");
 
-                        _logger.Debug("Login complete Beat bot online.");
-                        _logger.Debug(_config.Username);
+                        _logger.Debug("Login complete Beat bot online. -> " + _config.Username);
 
                         while (!_exit)
                         {
@@ -224,7 +302,7 @@ namespace TwitchIntegrationPlugin
                     case "!randomize":
                         var randomizer = new Random();
 
-                        for (var i = 0; (i < _config.RandomizeLimit) && (StaticData.QueueList.Count > 0); i++)
+                        for (var i = 0; StaticData.QueueList.Count > 0 && i < _config.RandomizeLimit; i++)
                         {
                             var randomIndex = randomizer.Next(StaticData.QueueList.Count);
                             var randomSong = (QueuedSong) StaticData.QueueList[randomIndex];
@@ -349,7 +427,6 @@ namespace TwitchIntegrationPlugin
                 return;
             }
 
-            var songExistsInQueue = false;
             var limitReached = false;
             var isAlreadyBanned = false;
 
@@ -373,70 +450,70 @@ namespace TwitchIntegrationPlugin
             if (isAlreadyBanned)
             {
                 SendMessage("Song is currently Blacklisted");
+                return;
             }
-            else
+
+            if (StaticData.QueueList.Count == 0)
             {
-                if (StaticData.QueueList.Count != 0)
+                AddQueueSong(qs, true);
+                return;
+            }
+
+            var internalCounter = 0;
+            foreach (QueuedSong q in StaticData.QueueList)
+            {
+                if (!q.SongName.Contains(qs.SongName)) continue;
+
+                SendMessage("\"" + qs.SongName + "\" already exists in the queue");
+                return;
+            }
+
+            foreach (QueuedSong q in StaticData.QueueList)
+            {
+                if (q.RequestedBy.Equals(requestedBy))
                 {
-                    var internalCounter = 0;
-
-                    foreach (QueuedSong q in StaticData.QueueList)
-                    {
-                        if (!q.SongName.Contains(qs.SongName)) continue;
-                        songExistsInQueue = true;
-                        break;
-                    }
-
-                    foreach (QueuedSong q in StaticData.QueueList)
-                    {
-                        if (q.RequestedBy.Equals(requestedBy))
-                        {
-                            internalCounter++;
-                        }
-                    }
-
-                    if (!_isBroadcaster)
-                    {
-                        if (!_isModerator)
-                        {
-                            if (_config.SubLimit == _config.ViewerLimit)
-                            {
-                                limitReached = internalCounter == _config.ViewerLimit;
-                            }
-                            else if (!_isSubscriber && (internalCounter == _config.ViewerLimit))
-                            {
-                                limitReached = true;
-                            }
-                            else if (_isSubscriber && (internalCounter == _config.SubLimit))
-                            {
-                                limitReached = true;
-                            }
-                        }
-                    }
-
-                    if (!limitReached)
-                    {
-                        if (!songExistsInQueue)
-                        {
-                            StaticData.QueueList.Add(qs);
-                            //StaticData.songQueue.Enqueue((QueuedSong)StaticData.queueList[StaticData.queueList.Count - 1]);
-                            SendMessage(requestedBy + " added \"" + qs.SongName + "\", uploaded by " + qs.AuthName + " to queue!");
-                        }
-                        else
-                            SendMessage("\"" + qs.SongName + "\" already exists in the queue");
-                    }
-                    else
-                    {
-                        SendMessage(requestedBy + ", you've reached the request limit.");
-                    }
+                    internalCounter++;
                 }
-                else
+            }
+
+            // Todo optimize if...
+            if (!_isBroadcaster && !_isModerator)
+            {
+                if (_config.SubLimit == _config.ViewerLimit)
                 {
-                    StaticData.QueueList.Add(qs);
-                    //StaticData.songQueue.Enqueue((QueuedSong)StaticData.queueList[StaticData.queueList.Count - 1]);
-                    SendMessage(requestedBy + " added \"" + qs.SongName + "\", uploaded by " + qs.AuthName + " to queue!");
-                    StaticData.SongAddedToQueueEvent.Invoke(qs);
+                    limitReached = internalCounter == _config.ViewerLimit;
                 }
+                else if (!_isSubscriber && (internalCounter == _config.ViewerLimit))
+                {
+                    limitReached = true;
+                }
+                else if (_isSubscriber && (internalCounter == _config.SubLimit))
+                {
+                    limitReached = true;
+                }
+            }
+
+            if (limitReached)
+            {
+                SendMessage(requestedBy + ", you've reached the request limit.");
+                return;
+            }
+
+            AddQueueSong(qs, true);
+        }
+
+        /**
+         * add a song to the queue
+         */
+        public void AddQueueSong(QueuedSong qs, bool sendMessage)
+        {
+            StaticData.QueueList.Add(qs);
+            // todo revisit? -> System.NullReferenceException: Object reference not set to an instance of an object
+            // StaticData.SongAddedToQueueEvent.Invoke(qs);
+
+            if (sendMessage)
+            {
+                SendMessage(qs.RequestedBy + " added \"" + qs.SongName + "\", uploaded by " + qs.AuthName + " to queue!");
             }
         }
 
@@ -444,14 +521,14 @@ namespace TwitchIntegrationPlugin
         {
             if (StaticData.QueueList.Count < 1)
             {
-                SendMessage("BeatSaber queue was empty.");
+                SendMessage("BeatSaber queue is empty.");
                 return;
             }
 
             StaticData.QueueList.RemoveAt(0);
             if (StaticData.QueueList.Count == 0)
             {
-                SendMessage("Queue is now empty");
+                SendMessage("Queue is now empty.");
                 return;
             }
 
@@ -485,22 +562,22 @@ namespace TwitchIntegrationPlugin
                 isEmptyMsg = "No songs currently banned.";
             }
 
-            if (queue.Count != 0)
+            if (queue.Count == 0)
             {
-                for (var i = 0; i < StaticData.QueueList.Count; i++)
-                {
-                    if (i < queue.Count - 1)
-                    {
-                        curr += ((QueuedSong) queue[i]).SongName + ", ";
-                    }
-                    else
-                        curr += ((QueuedSong) queue[i]).SongName;
-                }
-
-                SendMessage(curr);
-            }
-            else
                 SendMessage(isEmptyMsg);
+                return;
+            }
+            
+            for (var i = 0; i < StaticData.QueueList.Count; i++)
+            {
+                curr += ((QueuedSong) queue[i]).SongName;
+                if (i < queue.Count - 1)
+                {
+                    curr += ", ";
+                }
+            }
+
+            SendMessage(curr);
         }
 
         private void BlacklistSong(QueuedSong song, bool isAdd)
