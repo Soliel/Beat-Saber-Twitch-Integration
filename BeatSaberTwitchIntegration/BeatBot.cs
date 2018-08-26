@@ -364,7 +364,7 @@ namespace TwitchIntegrationPlugin
                 _config.ModOnly && (_isModerator || _isBroadcaster) ||
                 // sub only and is mod, broadcaster or sub
                 _config.SubOnly && (_isModerator || _isBroadcaster || _isSubscriber) ||
-                // no sub only and no sub only -> everyone can use command
+                // no mod only and no sub only -> everyone can use command
                 !_config.ModOnly && !_config.SubOnly
             )
             {
@@ -567,7 +567,7 @@ namespace TwitchIntegrationPlugin
                 SendMessage(isEmptyMsg);
                 return;
             }
-            
+
             for (var i = 0; i < StaticData.QueueList.Count; i++)
             {
                 curr += ((QueuedSong) queue[i]).SongName;
@@ -648,7 +648,6 @@ namespace TwitchIntegrationPlugin
                     writer.WriteElementString("ContinueQueue", "false");
                     writer.WriteElementString("Randomize", "false");
                     writer.WriteElementString("RandomizeLimit", "5");
-                    writer.WriteElementString("SendMessageOnConnect", "true");
                     writer.WriteEndElement();
                     writer.WriteEndDocument();
                 }
