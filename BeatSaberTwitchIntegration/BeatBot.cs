@@ -508,8 +508,7 @@ namespace TwitchIntegrationPlugin
         public void AddQueueSong(QueuedSong qs, bool sendMessage)
         {
             StaticData.QueueList.Add(qs);
-            // todo revisit? -> System.NullReferenceException: Object reference not set to an instance of an object
-            // StaticData.SongAddedToQueueEvent.Invoke(qs);
+            if (StaticData.QueueList.Count == 1) StaticData.SongAddedToQueueEvent?.Invoke(qs);
 
             if (sendMessage)
             {
