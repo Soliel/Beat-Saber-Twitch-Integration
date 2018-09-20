@@ -13,6 +13,7 @@ namespace TwitchIntegrationPlugin
         public static bool DidStartFromQueue = false;
         public static LevelCompletionResults LastLevelCompletionResults;
         public static IStandardLevelDifficultyBeatmap LastLevelPlayed;
+        public static GameplayOptions GameplayOptions;
 
         //HERE YA GO RQ
         public static Action<QueuedSong> SongAddedToQueueEvent;
