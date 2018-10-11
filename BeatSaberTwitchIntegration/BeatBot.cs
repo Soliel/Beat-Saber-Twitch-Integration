@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Xml;
@@ -17,6 +18,7 @@ namespace TwitchIntegrationPlugin
         //private const string Beatsaver = "https://beatsaver.com/";
         private readonly Config _config;
         private readonly Thread _botThread;
+        private readonly Thread _queueThread;
         private bool _retry;
         private bool _exit;
 
@@ -34,6 +36,8 @@ namespace TwitchIntegrationPlugin
         private readonly ArrayList _banList = new ArrayList();
 
         private readonly ArrayList _randomizedList = new ArrayList();
+
+        private readonly ArrayList _messageQueue = new ArrayList();
 
         private StreamWriter _writer;
 
@@ -75,11 +79,13 @@ namespace TwitchIntegrationPlugin
 
             _config = ReadCredsFromConfig();
             _botThread = new Thread(Initiate);
+            _queueThread = new Thread(SendMessageQueue); // send messages from queue
         }
 
         public void Start()
         {
             _botThread.Start();
+            _queueThread.Start();
         }
 
         public void Exit()
@@ -88,6 +94,8 @@ namespace TwitchIntegrationPlugin
             _exit = true;
             _botThread.Abort();
             _botThread.Join();
+            _queueThread.Abort();
+            _queueThread.Join();
 
             SaveQueue();
         }
@@ -163,7 +171,25 @@ namespace TwitchIntegrationPlugin
             File.WriteAllText("Plugins\\Config\\song_queue.txt", "[" + json + "]");
         }
 
-        public void Initiate()
+        /**
+         * check if queue has messages to send to irc server 
+         */
+        private void SendMessageQueue()
+        {
+            _logger.Debug("starting queue thread ;)");
+            while (!_exit)
+            {
+                // skip while if messageQueue is empty :)
+                if (_messageQueue.Count == 0) continue;
+                // send message to irc server and wait 1750ms (because twitch rate limit)
+                _writer.WriteLine(_messageQueue[0]);
+                _writer.Flush();
+                _messageQueue.RemoveAt(0);
+                Thread.Sleep(1750);
+            }
+        }
+
+        private void Initiate()
         {
             _logger.Debug("Twitch bot starting...");
             var retryCount = 0;
@@ -189,9 +215,7 @@ namespace TwitchIntegrationPlugin
                         SendMessage("JOIN #" + _config.Channel);
 
                         // Adding Capabilities Requests so that we can parse Viewer information
-                        SendMessage("CAP REQ :twitch.tv/membership");
-                        SendMessage("CAP REQ :twitch.tv/commands");
-                        SendMessage("CAP REQ :twitch.tv/tags");
+                        SendMessage("CAP REQ :twitch.tv/membership twitch.tv/commands twitch.tv/tags");
 
                         _logger.Debug("Login complete Beat bot online. -> " + _config.Username);
 
@@ -241,8 +265,8 @@ namespace TwitchIntegrationPlugin
 
         private void OnCommandReceived(string command, string username)
         {
-            var parsedCommand = command.Split();
-            var commandName = parsedCommand[0].Trim().ToLower();
+            var parameters = command.Split();
+            var commandName = parameters[0].Trim().ToLower();
 
             if (_isModerator || _isBroadcaster)
             {
@@ -255,7 +279,7 @@ namespace TwitchIntegrationPlugin
                         RemoveAllSongsFromQueue();
                         return;
                     case "!remove":
-                        if (parsedCommand.Length < 2)
+                        if (parameters.Length < 2)
                         {
                             SendMessage("Missing Song ID!");
                             return;
@@ -267,7 +291,7 @@ namespace TwitchIntegrationPlugin
                             return;
                         }
 
-                        var qs = ApiConnection.GetSongFromBeatSaver(false, parsedCommand[1], username);
+                        var qs = ApiConnection.GetSongFromBeatSaver(false, parameters[1], username);
                         if (qs == null)
                         {
                             SendMessage("Couldn't Parse BeatSaver Data.");
@@ -288,14 +312,14 @@ namespace TwitchIntegrationPlugin
                         return;
                     case "!block":
                     case "!unblock":
-                        if (parsedCommand.Length < 1)
+                        if (parameters.Length < 2)
                         {
                             SendMessage("Missing song ID!");
                             return;
                         }
 
                         BlacklistSong(
-                            ApiConnection.GetSongFromBeatSaver(false, parsedCommand[1], ""),
+                            ApiConnection.GetSongFromBeatSaver(false, parameters[1], ""),
                             commandName == "!block"
                         );
                         return;
@@ -368,18 +392,24 @@ namespace TwitchIntegrationPlugin
                 !_config.ModOnly && !_config.SubOnly
             )
             {
-                BasicCommands(commandName, parsedCommand, username);
+                BasicCommands(commandName, parameters, username);
             }
         }
 
-        private void BasicCommands(string commandName, IReadOnlyList<string> command, string username)
+        private void BasicCommands(string commandName, IReadOnlyList<string> parameters, string username)
         {
             switch (commandName)
             {
                 case "!bsr":
+                    if (parameters.Count < 2)
+                    {
+                        SendMessage("Missing song ID or song name!");
+                        return;
+                    }
+
                     try
                     {
-                        var split = command[1];
+                        var split = string.Join(" ", parameters.Skip(1));
                         AddRequestedSongToQueue(!char.IsDigit(split, 0), split, username);
                     }
                     catch (Exception e)
@@ -389,9 +419,15 @@ namespace TwitchIntegrationPlugin
 
                     break;
                 case "!add":
+                    if (parameters.Count < 2)
+                    {
+                        SendMessage("Missing song ID or song name!");
+                        return;
+                    }
+
                     try
                     {
-                        AddRequestedSongToQueue(false, command[1], username);
+                        AddRequestedSongToQueue(false, parameters[1], username);
                     }
                     catch (Exception e)
                     {
@@ -663,16 +699,15 @@ namespace TwitchIntegrationPlugin
                 var username = configNode.SelectSingleNode("Username").InnerText.ToLower();
                 var token = configNode.SelectSingleNode("Oauth").InnerText;
                 var channel = configNode.SelectSingleNode("Channel").InnerText.ToLower();
-                var modonly = ConvertToBoolean(configNode.SelectSingleNode("ModeratorOnly").InnerText.ToLower());
-                var subonly = ConvertToBoolean(configNode.SelectSingleNode("SubscriberOnly").InnerText.ToLower());
-                var viewerlimit = ConvertToInteger(configNode.SelectSingleNode("ViewerRequestLimit").InnerText.ToLower());
-                var sublimit = ConvertToInteger(configNode.SelectSingleNode("SubscriberLimitOverride").InnerText.ToLower());
-                var continuequeue = ConvertToBoolean(configNode.SelectSingleNode("ContinueQueue").InnerText.ToLower());
+                var modOnly = ConvertToBoolean(configNode.SelectSingleNode("ModeratorOnly").InnerText.ToLower());
+                var subOnly = ConvertToBoolean(configNode.SelectSingleNode("SubscriberOnly").InnerText.ToLower());
+                var viewerLimit = ConvertToInteger(configNode.SelectSingleNode("ViewerRequestLimit").InnerText.ToLower());
+                var subLimit = ConvertToInteger(configNode.SelectSingleNode("SubscriberLimitOverride").InnerText.ToLower());
+                var continueQueue = ConvertToBoolean(configNode.SelectSingleNode("ContinueQueue").InnerText.ToLower());
                 var randomize = ConvertToBoolean(configNode.SelectSingleNode("Randomize").InnerText.ToLower());
-                var randomizelimit = ConvertToInteger(configNode.SelectSingleNode("RandomizeLimit").InnerText.ToLower());
+                var randomizeLimit = ConvertToInteger(configNode.SelectSingleNode("RandomizeLimit").InnerText.ToLower());
 
-
-                return new Config(channel, token, username, modonly, subonly, viewerlimit, sublimit, continuequeue, randomize, randomizelimit);
+                return new Config(channel, token, username, modOnly, subOnly, viewerLimit, subLimit, continueQueue, randomize, randomizeLimit);
             }
             catch (Exception e)
             {
@@ -721,16 +756,17 @@ namespace TwitchIntegrationPlugin
 
         private void SendMessage(string message)
         {
-            if (message.Contains("PASS") || message.Contains("NICK") || message.Contains("JOIN #") || message.Contains("CAP REQ") || message.Contains("PONG"))
+            // ignore pong, it should be not send with a sleep
+            // ignore others only on start (faster bot start)
+            if (message.StartsWith("PASS") || message.StartsWith("NICK") || message.StartsWith("JOIN #") || message.StartsWith("CAP REQ") || message.StartsWith("PONG"))
             {
                 _writer.WriteLine(message);
+                _writer.Flush();
             }
             else
             {
-                _writer.WriteLine("PRIVMSG #" + _config.Channel + " :" + message);
+                _messageQueue.Add("PRIVMSG #" + _config.Channel + " :" + message);
             }
-
-            _writer.Flush();
         }
     }
 }
