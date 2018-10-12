@@ -83,8 +83,8 @@ namespace TwitchIntegrationPlugin.UI
 
             try
             {
-                ((RectTransform) twitchModeButton.transform).anchoredPosition = new Vector2(4f, 62f);
-                ((RectTransform) twitchModeButton.transform).sizeDelta = new Vector2(25f, 15f);
+                ((RectTransform) twitchModeButton.transform).anchoredPosition = new Vector2(4f, 68f);
+                ((RectTransform) twitchModeButton.transform).sizeDelta = new Vector2(34f, 10f);
 
                 SetButtonText(ref twitchModeButton, (StaticData.TwitchMode) ? "Twitch Mode: ON" : "Twitch Mode: OFF");
                 //SetButtonIcon(ref _twitchModeButton, icons.First(x => (x.name == "SettingsIcon")));
@@ -114,7 +114,7 @@ namespace TwitchIntegrationPlugin.UI
 
             try
             {
-                ((RectTransform) debugButton.transform).anchoredPosition = new Vector2(4f, 51f);
+                ((RectTransform) debugButton.transform).anchoredPosition = new Vector2(40f, 68f);
                 ((RectTransform) debugButton.transform).sizeDelta = new Vector2(25f, 10f);
 
                 SetButtonText(ref debugButton, "Request Queue");

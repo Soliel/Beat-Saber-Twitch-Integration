@@ -23,11 +23,11 @@ namespace TwitchIntegrationPlugin
 
             Destroy(cell);
 
-            this._song = song;
+            _song = song;
 
-            songName = this._song.BeatName;
-            author = this._song.AuthName;
-            StartCoroutine(TwitchIntegrationUi.LoadSprite(this._song.CoverUrl, this));
+            songName = _song.BeatName;
+            author = _song.AuthName;
+            StartCoroutine(TwitchIntegrationUi.LoadSprite(_song.CoverUrl, this));
         }
     }
 }
