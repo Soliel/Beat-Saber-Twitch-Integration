@@ -22,8 +22,8 @@ namespace TwitchIntegrationPlugin
             var logfile = new NLog.Targets.FileTarget("logfile") { FileName = "TILog.txt" };
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
 
-            nlogconfig.AddRule(LogLevel.Error, LogLevel.Fatal, logconsole);
-            nlogconfig.AddRule(LogLevel.Error, LogLevel.Fatal, logfile);
+            nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
+            nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
             LogManager.Configuration = nlogconfig;
         }
 
