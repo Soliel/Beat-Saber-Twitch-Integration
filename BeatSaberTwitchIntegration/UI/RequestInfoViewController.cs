@@ -221,9 +221,7 @@ namespace TwitchIntegrationPlugin.UI
         {
             try
             {
-                return SongLoader.CustomLevels.FirstOrDefault(x => x.songName == song.SongName &&
-                                                                   x.beatsPerMinute == song.Bpm &&
-                                                                   x.songAuthorName == song.AuthName) != null;
+                return SongLoader.CustomLevels.FirstOrDefault(x => x.levelID.Contains(song.SongHash)) != null;
             }
             catch (Exception e)
             {

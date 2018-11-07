@@ -3,7 +3,7 @@ using SongLoaderPlugin;
 
 namespace TwitchIntegrationPlugin
 {
-    public class QueuedSong
+    public struct QueuedSong
     {
         public string SongName { get; }
         public string BeatName { get; }
@@ -14,8 +14,10 @@ namespace TwitchIntegrationPlugin
         public string RequestedBy { get; }
         public string CoverUrl { get; }
         public string SongSubName { get; }
+        public string SongHash { get; }
 
-        public QueuedSong(string songname, string beatname, string authname, string bpm, string id, string songSubName, string dlUrl, string requestedBy, string coverUrl)
+
+        public QueuedSong(string songname, string beatname, string authname, string bpm, string id, string songSubName, string dlUrl, string requestedBy, string coverUrl, string songHash)
         {
             SongName = songname;
             BeatName = beatname;
@@ -26,6 +28,7 @@ namespace TwitchIntegrationPlugin
             DownloadUrl = dlUrl;
             RequestedBy = requestedBy;
             CoverUrl = coverUrl;
+            SongHash = songHash;
         }
 
         public bool CompareSongs(CustomSongInfo song)

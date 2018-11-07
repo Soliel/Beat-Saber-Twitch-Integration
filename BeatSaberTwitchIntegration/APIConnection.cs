@@ -54,7 +54,8 @@ namespace TwitchIntegrationPlugin
                 node["songSubName"],
                 node["downloadUrl"],
                 requestedBy,
-                node["coverUrl"]
+                node["coverUrl"],
+                node["hashMd5"]
             );
         }
 

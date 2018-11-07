@@ -186,9 +186,7 @@ namespace TwitchIntegrationPlugin.UI
             _requestInfoViewController.SetDownloadButtonText("Downloaded");
             _requestInfoViewController.SetDownloadState(false);
 
-            _customLevel = SongLoader.CustomLevels.Find(x => x.songName == _song.SongName &&
-                                                             x.songAuthorName == _song.AuthName &&
-                                                             x.beatsPerMinute == _song.Bpm);
+            _customLevel = SongLoader.CustomLevels.Find(x => x.levelID.Contains(_song.SongHash));
 
             SongLoader.Instance.LoadAudioClipForLevel(_customLevel, (level) =>
             {
@@ -293,7 +291,7 @@ namespace TwitchIntegrationPlugin.UI
             _resultsFlowCoordinator.Present(parentViewController, StaticData.LastLevelCompletionResults, StaticData.LastLevelPlayed,
                 GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
             StaticData.LastLevelCompletionResults = null;
-            StaticData.DidStartFromQueue = false;
+            StartCoroutine(WaitForResults());
         }
 
         public IEnumerator WaitForResults()
@@ -309,6 +307,7 @@ namespace TwitchIntegrationPlugin.UI
                 {
                     _logger.Debug("Results!");
                     viewController.DismissModalViewController(null, true);
+                    StaticData.DidStartFromQueue = false;
 
                     FindObjectOfType<StandardLevelDetailViewController>().DismissModalViewController(null, true);
                     FindObjectOfType<StandardLevelDifficultyViewController>().DismissModalViewController(null, true);
