@@ -133,7 +133,8 @@ namespace TwitchIntegrationPlugin
                     song["songSubName"],
                     song["downloadUrl"],
                     song["requestedBy"],
-                    song["coverUrl"]
+                    song["coverUrl"],
+                    song["songHash"]
                 );
                 AddQueueSong(qs, false);
             }

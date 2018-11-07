@@ -15,7 +15,7 @@ namespace TwitchIntegrationPlugin
 
         public static QueuedSong GetSongFromBeatSaver(bool isTextSearch, string queryString, string requestedBy)
         {
-            var apiPath = isTextSearch ? "{0}/api/songs/search/all/{1}" : "{0}/api/songs/detail/{1}";
+            string apiPath = isTextSearch ? "{0}/api/songs/search/all/{1}" : "{0}/api/songs/detail/{1}";
 
             var webRequest = (HttpWebRequest) WebRequest.Create(string.Format(apiPath, BeatSaver, queryString));
             webRequest.Method = "GET";
@@ -42,7 +42,7 @@ namespace TwitchIntegrationPlugin
                 return null;
             }
 
-            var node = JSON.Parse(result);
+            JSONNode node = JSON.Parse(result);
             node = isTextSearch ? node["songs"][0] : node["song"];
 
             return new QueuedSong(
