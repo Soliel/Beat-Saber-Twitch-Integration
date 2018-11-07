@@ -4,17 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NLog;
+using UnityEngine;
+using Logger = NLog.Logger;
 
 namespace TwitchIntegrationPlugin
 {
-    public class BeatBotNew
+    public class BeatBotNew : MonoBehaviour
     {
         private Logger _logger;
         public BeatBotNew()
         {
             _logger = LogManager.GetCurrentClassLogger();
-            StaticData.TiConfig = StaticData.TiConfig.LoadFromJson();
 
+            StaticData.Config = StaticData.Config.LoadFromJson();
+            StaticData.SongQueue.LoadSongQueue();
+            StaticData.BanList.LoadBanList();
 
 
         }

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Xml;
 using NLog;
 using SimpleJSON;
+using TwitchIntegrationPlugin.Serializables;
 
 
 namespace TwitchIntegrationPlugin

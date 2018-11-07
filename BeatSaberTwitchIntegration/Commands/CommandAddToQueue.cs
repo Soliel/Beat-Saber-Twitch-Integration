@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using AsyncTwitch;
+using TwitchIntegrationPlugin.Serializables;
 
 namespace TwitchIntegrationPlugin.Commands
 {
@@ -28,7 +29,7 @@ namespace TwitchIntegrationPlugin.Commands
             {
                 TwitchConnection.Instance.SendChatMessage("Invalid Request.");
             }
-            if (StaticData.BanList.Contains(request.Id))
+            if (StaticData.BanList.IsBanned(request.Id))
             {
                 TwitchConnection.Instance.SendChatMessage("Song is currently banned.");
                 return;
@@ -40,38 +41,38 @@ namespace TwitchIntegrationPlugin.Commands
                 return;
             }
 
-            if (StaticData.userRequests.ContainsKey(msg.Author.DisplayName))
+            if (StaticData.UserRequestCount.ContainsKey(msg.Author.DisplayName))
             {
                 int requestLimit = msg.Author.IsSubscriber
-                    ? StaticData.TiConfig.SubLimit
-                    : StaticData.TiConfig.ViewerLimit;
-                if (StaticData.userRequests[msg.Author.DisplayName] <= requestLimit)
+                    ? StaticData.Config.SubLimit
+                    : StaticData.Config.ViewerLimit;
+                if (StaticData.UserRequestCount[msg.Author.DisplayName] <= requestLimit)
                 {
                     TwitchConnection.Instance.SendChatMessage(msg.Author.DisplayName + " you're making too many requests. Slow down.");
                     return;
                 }
 
                 if(AddToQueue(request))
-                    StaticData.userRequests[msg.Author.DisplayName]++;
+                    StaticData.UserRequestCount[msg.Author.DisplayName]++;
                 
             }
             else
             {
                 if(AddToQueue(request))
-                    StaticData.userRequests.Add(msg.Author.DisplayName, 1);
+                    StaticData.UserRequestCount.Add(msg.Author.DisplayName, 1);
             }
 
         }
 
         private bool AddToQueue(QueuedSong song)
         {
-            if (StaticData.QueueList.Contains(song))
+            if (StaticData.SongQueue.IsSongInQueue(song))
             {
                 TwitchConnection.Instance.SendChatMessage("Song already in queue.");
                 return false;
             }
 
-            StaticData.QueueList.Add(song);
+            StaticData.SongQueue.AddSongToQueue(song);
             TwitchConnection.Instance.SendChatMessage($"{song.RequestedBy} added \"{song.SongName}\", uploaded by: {song.AuthName} to queue!");
             return true;
         }

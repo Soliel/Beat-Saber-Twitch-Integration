@@ -1,20 +1,21 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System;
 using SongLoaderPlugin;
 
-namespace TwitchIntegrationPlugin
+namespace TwitchIntegrationPlugin.Serializables
 {
+    [Serializable]
     public struct QueuedSong
     {
-        public string SongName { get; }
-        public string BeatName { get; }
-        public string AuthName { get; }
-        public float Bpm { get; }
-        public string Id { get; }
-        public string DownloadUrl { get; }
-        public string RequestedBy { get; }
-        public string CoverUrl { get; }
-        public string SongSubName { get; }
-        public string SongHash { get; }
+        public string SongName;
+        public string BeatName;
+        public string AuthName;
+        public float Bpm;
+        public string Id;
+        public string DownloadUrl;
+        public string RequestedBy;
+        public string CoverUrl;
+        public string SongSubName;
+        public string SongHash;
 
 
         public QueuedSong(string songname, string beatname, string authname, string bpm, string id, string songSubName, string dlUrl, string requestedBy, string coverUrl, string songHash)

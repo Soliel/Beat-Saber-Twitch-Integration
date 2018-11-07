@@ -49,8 +49,9 @@
     <Compile Include="BeatSaver.cs" />
     <Compile Include="Commands\CommandAddToQueue.cs" />
     <Compile Include="Commands\IrcCommand.cs" />
-    <Compile Include="Serializable\BanList.cs" />
-    <Compile Include="Serializable\config.cs" />
+    <Compile Include="Serializables\BanList.cs" />
+    <Compile Include="Serializables\config.cs" />
+    <Compile Include="Serializables\SongQueue.cs" />
     <Compile Include="ICSharpCode.SharpZipLib\Checksum\Adler32.cs" />
     <Compile Include="ICSharpCode.SharpZipLib\Checksum\BZip2Crc.cs" />
     <Compile Include="ICSharpCode.SharpZipLib\Checksum\Crc32.cs" />
@@ -97,7 +98,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="QueuedSong.cs" />
+    <Compile Include="Serializables\QueuedSong.cs" />
     <Compile Include="RequestQueueController.cs" />
     <Compile Include="RequestQueueTableCell.cs" />
     <Compile Include="StaticData.cs" />

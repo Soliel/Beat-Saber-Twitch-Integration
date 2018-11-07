@@ -3,6 +3,7 @@ using AsyncTwitch;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
+using TwitchIntegrationPlugin.Serializables;
 
 namespace TwitchIntegrationPlugin
 {

@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace TwitchIntegrationPlugin
+namespace TwitchIntegrationPlugin.Serializables
 {
     [Serializable]
     public class Config
