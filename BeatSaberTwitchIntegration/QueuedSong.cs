@@ -16,6 +16,7 @@ namespace TwitchIntegrationPlugin
         public string SongSubName { get; }
         public string SongHash { get; }
 
+
         public QueuedSong(string songname, string beatname, string authname, string bpm, string id, string songSubName, string dlUrl, string requestedBy, string coverUrl, string songHash)
         {
             SongName = songname;
