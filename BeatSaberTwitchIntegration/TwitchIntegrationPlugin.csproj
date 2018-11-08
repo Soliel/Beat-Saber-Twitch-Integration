@@ -44,11 +44,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="APIConnection.cs" />
-    <Compile Include="BeatBot.cs" />
     <Compile Include="BeatBotNew.cs" />
     <Compile Include="BeatSaver.cs" />
     <Compile Include="Commands\CommandAddToQueue.cs" />
     <Compile Include="Commands\IrcCommand.cs" />
+    <Compile Include="Commands\RemoveSongFromQueue.cs" />
     <Compile Include="Serializables\BanList.cs" />
     <Compile Include="Serializables\config.cs" />
     <Compile Include="Serializables\SongQueue.cs" />
@@ -123,21 +123,27 @@
     <Reference Include="Accessibility" />
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\Resources\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="AsyncTwitch">
       <HintPath>..\..\AsyncTwitch\AsyncTwitch\bin\Release\AsyncTwitch.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="IllusionInjector">
       <HintPath>..\..\Resources\IllusionInjector.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="IllusionPlugin">
       <HintPath>..\..\Resources\IllusionPlugin.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="NLog">
-      <HintPath>..\..\Resources\NLog.dll</HintPath>
+      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\NLog.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SongLoaderPlugin">
       <HintPath>..\..\Resources\SongLoaderPlugin.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -157,29 +163,49 @@
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml" />
+    <Reference Include="TextMeshPro-1.0.55.2017.1.0b12">
+      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\TextMeshPro-1.0.55.2017.1.0b12.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\Resources\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\Resources\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">
       <HintPath>..\..\Resources\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.Networking">
       <HintPath>..\..\Resources\UnityEngine.Networking.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\..\Resources\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
       <HintPath>..\..\Resources\UnityEngine.UIElementsModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
       <HintPath>..\..\Resources\UnityEngine.UIModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestModule">
-      <HintPath>..\..\Resources\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

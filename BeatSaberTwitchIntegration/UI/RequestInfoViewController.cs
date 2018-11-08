@@ -8,6 +8,7 @@ using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using TMPro;
 using TwitchIntegrationPlugin.ICSharpCode.SharpZipLib.Zip;
+using TwitchIntegrationPlugin.Serializables;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -198,7 +199,7 @@ namespace TwitchIntegrationPlugin.UI
             else
                 _ui.SetButtonText(ref _downloadButton, "Download");
 
-            _queuedSong = null;
+            _queuedSong = new QueuedSong();
             FindObjectOfType<LevelRequestFlowCoordinator>().CheckQueueAndUpdate(); //This kinda goes against the purpose of a flow controller, but I just want it to work.
         }
 

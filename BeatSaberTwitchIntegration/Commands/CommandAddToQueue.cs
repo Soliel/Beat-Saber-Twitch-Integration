@@ -1,15 +1,17 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using AsyncTwitch;
+using JetBrains.Annotations;
 using TwitchIntegrationPlugin.Serializables;
 
 namespace TwitchIntegrationPlugin.Commands
 {
+    [UsedImplicitly]
     public class CommandAddToQueue : IrcCommand
     {
-        public override string CommandName => "bsr";
-        public override string[] CommandAlias => new string[] {"add"};
+        public override string[] CommandAlias => new [] {"bsr", "add"};
 
-        private readonly Regex _songIDRX = new Regex(@"\d+-\d+", RegexOptions.Compiled);
+        private readonly Regex _songIDRX = new Regex(@"^[0-9\-]+$", RegexOptions.Compiled);
         
 
         public override void Run(TwitchMessage msg)
@@ -20,14 +22,15 @@ namespace TwitchIntegrationPlugin.Commands
                 return;
             }
 
-            string QueryString = msg.Content.Remove(0, 5);
-            bool isTextSearch = _songIDRX.IsMatch(QueryString);
+            string queryString = msg.Content.Remove(0, msg.Content.IndexOf(' ') + 1);
+            bool isTextSearch = !_songIDRX.IsMatch(queryString);
             
 
-            QueuedSong request = BeatSaver.GetSongFromBeatSaver(QueryString, isTextSearch, msg.Author.DisplayName);
-            if (request.SongHash == "")
+            QueuedSong request = ApiConnection.GetSongFromBeatSaver(isTextSearch, queryString,  msg.Author.DisplayName);
+            if (request.SongHash == "" || request.Id == "")
             {
                 TwitchConnection.Instance.SendChatMessage("Invalid Request.");
+                return;
             }
             if (StaticData.BanList.IsBanned(request.Id))
             {
@@ -43,6 +46,7 @@ namespace TwitchIntegrationPlugin.Commands
 
             if (StaticData.UserRequestCount.ContainsKey(msg.Author.DisplayName))
             {
+                Console.WriteLine(msg.ToString());
                 int requestLimit = msg.Author.IsSubscriber
                     ? StaticData.Config.SubLimit
                     : StaticData.Config.ViewerLimit;

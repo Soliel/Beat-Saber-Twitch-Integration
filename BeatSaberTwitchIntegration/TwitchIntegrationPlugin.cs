@@ -1,6 +1,8 @@
-﻿using IllusionPlugin;
+﻿using System;
+using IllusionPlugin;
 using NLog;
 using TwitchIntegrationPlugin.UI;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace TwitchIntegrationPlugin
@@ -10,11 +12,10 @@ namespace TwitchIntegrationPlugin
 
         public string Name => "Beat Saber Twitch Integration";
         public string Version => "2.0.2_bs-0.11.2";
-        private readonly BeatBot _bot = new BeatBot();
+        private static BeatBotNew _bot;
 
         public void OnApplicationStart()
-        { 
-            _bot.Start();
+        {
             StaticData.TwitchMode = false;
 
             var nlogconfig = new NLog.Config.LoggingConfiguration();
@@ -25,11 +26,14 @@ namespace TwitchIntegrationPlugin
             nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
             nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
             LogManager.Configuration = nlogconfig;
+            
+            Console.WriteLine("Starting BeatBot");
+
+            _bot = new BeatBotNew();
         }
 
         public void OnApplicationQuit()
         {
-            _bot.Exit();
         }
 
         public void OnLevelWasLoaded(int level)

@@ -68,6 +68,11 @@ namespace TwitchIntegrationPlugin.Serializables
             return _songQueue.Contains(song);
         }
 
+        public bool DoesQueueHaveSongs()
+        {
+            return _songQueue.Count == 0 ? true : false;
+        }
+
         public List<QueuedSong> GetSongList()
         {
             return _songQueue;

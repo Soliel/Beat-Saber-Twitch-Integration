@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NLog;
 using TMPro;
+using TwitchIntegrationPlugin.Serializables;
 using TwitchIntegrationPlugin.UI;
 using UnityEngine;
 using VRUI;
@@ -28,7 +29,7 @@ namespace TwitchIntegrationPlugin
             _ui = TwitchIntegrationUi.Instance;
 
             _songListTableCellInstance = Resources.FindObjectsOfTypeAll<StandardLevelListTableCell>().First(x => (x.name == "SongListTableCell"));
-            _queuedSongs = StaticData.QueueList.OfType<QueuedSong>().ToList();
+            _queuedSongs = StaticData.SongQueue.GetSongList();
             _top5Queued = (List<QueuedSong>)_queuedSongs.Take(5);
 
             if (_titleText == null)
@@ -88,7 +89,7 @@ namespace TwitchIntegrationPlugin
 
             var queueCell = tableCell.gameObject.AddComponent<RequestQueueTableCell>();
 
-            queueCell.Init(_queuedSongs[row]);
+            //queueCell.Init(_queuedSongs[row]);
 
             return queueCell;
         }

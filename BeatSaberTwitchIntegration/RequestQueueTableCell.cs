@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using TwitchIntegrationPlugin.Serializables;
 using TwitchIntegrationPlugin.UI;
 
 namespace TwitchIntegrationPlugin

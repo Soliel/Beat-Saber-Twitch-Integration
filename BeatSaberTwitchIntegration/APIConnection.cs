@@ -6,6 +6,7 @@ using System.Net.Security;
 using System.IO;
 using SimpleJSON;
 using System.Text;
+using TwitchIntegrationPlugin.Serializables;
 
 namespace TwitchIntegrationPlugin
 {
@@ -15,9 +16,9 @@ namespace TwitchIntegrationPlugin
 
         public static QueuedSong GetSongFromBeatSaver(bool isTextSearch, string queryString, string requestedBy)
         {
-            string apiPath = isTextSearch ? "{0}/api/songs/search/all/{1}" : "{0}/api/songs/detail/{1}";
+            var apiPath = isTextSearch ? "{0}/api/songs/search/all/{1}" : "{0}/api/songs/detail/{1}";
 
-            var webRequest = (HttpWebRequest) WebRequest.Create(string.Format(apiPath, BeatSaver, queryString));
+            var webRequest = (HttpWebRequest)WebRequest.Create(string.Format(apiPath, BeatSaver, queryString));
             webRequest.Method = "GET";
             webRequest.ContentType = "application/json";
             ServicePointManager.ServerCertificateValidationCallback = MyRemoteCertificateValidationCallback;
@@ -26,7 +27,7 @@ namespace TwitchIntegrationPlugin
             try
             {
                 var enc = Encoding.GetEncoding("utf-8");
-                var webResponse = (HttpWebResponse) webRequest.GetResponse();
+                var webResponse = (HttpWebResponse)webRequest.GetResponse();
                 var responseStream = new StreamReader(webResponse.GetResponseStream() ?? throw new NoNullAllowedException(), enc);
                 result = responseStream.ReadToEnd();
                 webResponse.Close();
@@ -34,15 +35,15 @@ namespace TwitchIntegrationPlugin
             catch (WebException)
             {
                 // todo log error? think is 404
-                return null;
+                return new QueuedSong();
             }
 
             if (result.Length == 0 || result == "{\"songs\":[],\"total\":0}")
             {
-                return null;
+                return new QueuedSong();
             }
 
-            JSONNode node = JSON.Parse(result);
+            var node = JSON.Parse(result);
             node = isTextSearch ? node["songs"][0] : node["song"];
 
             return new QueuedSong(
@@ -78,7 +79,7 @@ namespace TwitchIntegrationPlugin
                 chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
                 chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllFlags;
 
-                var chainIsValid = chain.Build((X509Certificate2) certificate);
+                var chainIsValid = chain.Build((X509Certificate2)certificate);
                 if (chainIsValid) continue;
 
                 isOk = false;

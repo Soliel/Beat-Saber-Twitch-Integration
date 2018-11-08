@@ -6,6 +6,7 @@ using VRUI;
 using SongLoaderPlugin;
 using NLog;
 using SongLoaderPlugin.OverrideClasses;
+using TwitchIntegrationPlugin.Serializables;
 
 namespace TwitchIntegrationPlugin.UI
 {
@@ -133,7 +134,7 @@ namespace TwitchIntegrationPlugin.UI
             StaticData.LastLevelCompletionResults = null;
             StaticData.DidStartFromQueue = true;
             StaticData.LastLevelPlayed = viewController.difficultyLevel;
-            StaticData.QueueList.RemoveAt(0);
+            StaticData.SongQueue.PopQueuedSong();
             Finish();
 
             _mainGameSceneSetupData.Init(_levelDetailViewController.difficultyLevel, GameplayOptions.defaultOptions, GameplayMode.SoloStandard, 0f);
@@ -160,8 +161,8 @@ namespace TwitchIntegrationPlugin.UI
             _levelRequestNavigationController.ClearChildControllers();
             _requestInfoViewController.Init("Default song", "Default Requestor");
             _levelRequestNavigationController.PushViewController(_requestInfoViewController);
-            StaticData.QueueList.RemoveAt(0);
-            _song = (QueuedSong) StaticData.QueueList[0];
+            StaticData.SongQueue.PopQueuedSong();
+            _song = StaticData.SongQueue.PeekQueuedSong();
             CheckQueueAndUpdate();
         }
 
@@ -172,8 +173,8 @@ namespace TwitchIntegrationPlugin.UI
 
         public void CheckQueueAndUpdate()
         {
-            if (StaticData.QueueList.Count <= 0) return;
-            _song = (QueuedSong) StaticData.QueueList[0];
+            if (!StaticData.SongQueue.DoesQueueHaveSongs()) return;
+            _song = StaticData.SongQueue.PeekQueuedSong();
             _requestInfoViewController.SetQueuedSong(_song);
 
             if (!_requestInfoViewController.DoesSongExist(_song))
@@ -252,7 +253,7 @@ namespace TwitchIntegrationPlugin.UI
                 _logger.Error(e);
             }
 
-            if (StaticData.QueueList.Count > 0 && StaticData.TwitchMode)
+            if (StaticData.SongQueue.DoesQueueHaveSongs() && StaticData.TwitchMode)
             {
                 try
                 {
@@ -296,7 +297,7 @@ namespace TwitchIntegrationPlugin.UI
 
         public IEnumerator WaitForResults()
         {
-            if (!StaticData.TwitchMode || StaticData.QueueList.Count <= 0) yield break;
+            if (!StaticData.TwitchMode || !StaticData.SongQueue.DoesQueueHaveSongs()) yield break;
             _logger.Debug("Waiting for contoller to init.");
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ResultsViewController>().Any());
             var results = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
@@ -325,6 +326,11 @@ namespace TwitchIntegrationPlugin.UI
                     _logger.Error($"RESULTS EXCEPTION: {e}");
                 }
             };
+
+            results.restartButtonPressedEvent += delegate(ResultsViewController viewController)
+                {
+                    StaticData.DidStartFromQueue = true;
+                };
         }
     }
 }

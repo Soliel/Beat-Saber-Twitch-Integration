@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using AsyncTwitch;
 using SimpleJSON;
 using UnityEngine;
@@ -27,7 +28,7 @@ namespace TwitchIntegrationPlugin
                 time += Time.deltaTime;
 
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (!(time >= 5f) || asyncRequest.progress != 0f) continue;
+                if ((time >= 5f) && asyncRequest.progress == 0f) continue;
                 www.Abort();
                 timeout = true;
             }
@@ -64,7 +65,7 @@ namespace TwitchIntegrationPlugin
                     node["coverUrl"],
                     node["hashMd5"]);
             }
-
+            Console.WriteLine(resultSong);
             return resultSong;
         }
     }
