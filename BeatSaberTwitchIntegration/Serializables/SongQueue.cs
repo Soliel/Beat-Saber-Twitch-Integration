@@ -49,6 +49,7 @@ namespace TwitchIntegrationPlugin.Serializables
         {
             QueuedSong returnSong = _songQueue[0];
             _songQueue.RemoveAt(0);
+            returnSong.InvokeDequeueCallback();
 
             return returnSong;
         }
@@ -60,6 +61,7 @@ namespace TwitchIntegrationPlugin.Serializables
 
         public void RemoveSongFromQueue(QueuedSong song)
         {
+            song.InvokeDequeueCallback();
             _songQueue.Remove(song);
         }
 

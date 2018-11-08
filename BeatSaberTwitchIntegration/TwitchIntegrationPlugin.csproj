@@ -48,6 +48,7 @@
     <Compile Include="BeatSaver.cs" />
     <Compile Include="Commands\CommandAddToQueue.cs" />
     <Compile Include="Commands\IrcCommand.cs" />
+    <Compile Include="Commands\PrintQueueCommand.cs" />
     <Compile Include="Commands\RemoveSongFromQueue.cs" />
     <Compile Include="Serializables\BanList.cs" />
     <Compile Include="Serializables\config.cs" />

@@ -76,6 +76,11 @@ namespace TwitchIntegrationPlugin.Commands
                 return false;
             }
 
+            song.DequeuedCallback += () =>
+            {
+                StaticData.UserRequestCount[song.RequestedBy]--;
+            };
+
             StaticData.SongQueue.AddSongToQueue(song);
             TwitchConnection.Instance.SendChatMessage($"{song.RequestedBy} added \"{song.SongName}\", uploaded by: {song.AuthName} to queue!");
             return true;

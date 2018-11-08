@@ -4,7 +4,7 @@ using SongLoaderPlugin;
 namespace TwitchIntegrationPlugin.Serializables
 {
     [Serializable]
-    public struct QueuedSong
+    public class QueuedSong
     {
         public string SongName;
         public string BeatName;
@@ -16,6 +16,8 @@ namespace TwitchIntegrationPlugin.Serializables
         public string CoverUrl;
         public string SongSubName;
         public string SongHash;
+
+        public event Action DequeuedCallback;
 
 
         public QueuedSong(string songname, string beatname, string authname, string bpm, string id, string songSubName, string dlUrl, string requestedBy, string coverUrl, string songHash)
@@ -30,6 +32,24 @@ namespace TwitchIntegrationPlugin.Serializables
             RequestedBy = requestedBy;
             CoverUrl = coverUrl;
             SongHash = songHash;
+        }
+
+        public QueuedSong()
+        {
+            SongName = "";
+            BeatName = "";
+            AuthName = "";
+            Id = "";
+            Bpm = 0;
+            SongSubName = "";
+            DownloadUrl = "";
+            CoverUrl = "";
+            SongHash = "";
+        }
+
+        public void InvokeDequeueCallback()
+        {
+            DequeuedCallback?.Invoke();
         }
 
         public bool CompareSongs(CustomSongInfo song)

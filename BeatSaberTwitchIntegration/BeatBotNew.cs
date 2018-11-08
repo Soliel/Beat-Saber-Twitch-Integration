@@ -14,6 +14,7 @@ namespace TwitchIntegrationPlugin
 {
     public class BeatBotNew
     {
+        private const string Prefix = "!";
         private Logger _logger;
         private Dictionary<string, IrcCommand> _commandDict = new Dictionary<string, IrcCommand>();
 
@@ -34,9 +35,9 @@ namespace TwitchIntegrationPlugin
 
         private void OnMessageReceived(TwitchConnection connection, TwitchMessage msg)
         {
-            if (!msg.Content.StartsWith("!")) return;
+            if (!msg.Content.StartsWith(Prefix)) return;
             string commandString = msg.Content.Split(' ')[0];
-            commandString = commandString.Remove(0, 1);
+            commandString = commandString.Remove(0, Prefix.Length);
 
             if (_commandDict.ContainsKey(commandString))
             {

@@ -58,7 +58,7 @@ namespace TwitchIntegrationPlugin.Serializables
 
         private void CreateDefaultConfig()
         {
-            new Config(false, false, 0, 0, false, false, 0).SaveJSON();
+            new Config(false, false, 3, 5, true, false, 0).SaveJSON();
         }
     }
 }
