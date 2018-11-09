@@ -131,8 +131,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AsyncTwitch">
-      <HintPath>..\..\AsyncTwitch\AsyncTwitch\bin\Release\AsyncTwitch.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\AsyncTwitch.dll</HintPath>
     </Reference>
     <Reference Include="IllusionInjector">
       <HintPath>..\..\Resources\IllusionInjector.dll</HintPath>

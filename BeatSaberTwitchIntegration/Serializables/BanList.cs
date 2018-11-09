@@ -54,9 +54,24 @@ namespace TwitchIntegrationPlugin.Serializables
 
         public void SaveBanList()
         {
-            using (FileStream fs = new FileStream("UserData/TwitchIntegrationBans.json", FileMode.Create,
-                FileAccess.Write))
+            using (FileStream fs = new FileStream("UserData/TwitchIntegrationBans.json", FileMode.OpenOrCreate,
+                FileAccess.ReadWrite))
             {
+                if (File.Exists("UserData/TwitchIntegrationBans.json"))
+                {
+                    byte[] readBuffer = new byte[fs.Length];
+                    fs.Read(readBuffer, 0, readBuffer.Length);
+                    BanList tempList = JsonUtility.FromJson<BanList>(Encoding.ASCII.GetString(readBuffer));
+
+                    foreach (string bannedSong in tempList.GetBanList())
+                    {
+                        if (!_bannedSongs.Contains(bannedSong))
+                        {
+                            _bannedSongs.Add(bannedSong);
+                        }
+                    }
+                }
+
                 byte[] buffer = Encoding.ASCII.GetBytes(JsonUtility.ToJson(this, true));
                 fs.Write(buffer, 0, buffer.Length);
             }

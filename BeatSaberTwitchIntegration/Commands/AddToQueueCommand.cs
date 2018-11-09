@@ -14,7 +14,7 @@ namespace TwitchIntegrationPlugin.Commands
         
         public override void Run(TwitchMessage msg)
         {
-            if (StaticData.TwitchMode && !msg.Author.IsMod && !msg.Author.IsBroadcaster)
+            if (!StaticData.TwitchMode && !msg.Author.IsMod && !msg.Author.IsBroadcaster)
             {
                 TwitchConnection.Instance.SendChatMessage("The Queue is currently closed.");
                 return;
