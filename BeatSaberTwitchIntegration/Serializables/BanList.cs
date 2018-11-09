@@ -19,37 +19,37 @@ namespace TwitchIntegrationPlugin.Serializables
             _bannedSongs = new List<string>();
         }
 
-        public void AddToBanList(string songID)
+        public void AddToBanList(string songId)
         {
-            if (!_songIdValidationRegex.IsMatch(songID)) throw new FormatException("songID is not in the valid format.");
-            if (songID.Contains("-"))
+            if (!_songIdValidationRegex.IsMatch(songId)) throw new FormatException("songId is not in the valid format.");
+            if (songId.Contains("-"))
             {
-                _bannedSongs.Add(songID.Split('-')[0]);
+                songId = songId.Split('-')[0];
             }
 
-            _bannedSongs.Add(songID);
+            _bannedSongs.Add(songId);
         }
 
-        public void RemoveFromBanList(string songID)
+        public void RemoveFromBanList(string songId)
         {
-            if (!_songIdValidationRegex.IsMatch(songID)) throw new FormatException("songID is not in the valid format");
-            if (songID.Contains("-"))
+            if (!_songIdValidationRegex.IsMatch(songId)) throw new FormatException("songId is not in the valid format");
+            if (songId.Contains("-"))
             {
-                songID = songID.Split('-')[0];
+                songId = songId.Split('-')[0];
             }
 
-            _bannedSongs.Remove(songID);
+            _bannedSongs.Remove(songId);
         }
 
-        public bool IsBanned(string songID)
+        public bool IsBanned(string songId)
         {
-            if (!_songIdValidationRegex.IsMatch(songID)) throw new FormatException("songID is not in the valid format.");
-            if (songID.Contains("-"))
+            if (!_songIdValidationRegex.IsMatch(songId)) throw new FormatException("songId is not in the valid format.");
+            if (songId.Contains("-"))
             {
-                songID = songID.Split('-')[0];
+                songId = songId.Split('-')[0];
             }
 
-            return _bannedSongs.Contains(songID);
+            return _bannedSongs.Contains(songId);
         }
 
         public void SaveBanList()
@@ -57,8 +57,8 @@ namespace TwitchIntegrationPlugin.Serializables
             using (FileStream fs = new FileStream("UserData/TwitchIntegrationBans.json", FileMode.Create,
                 FileAccess.Write))
             {
-                byte[] Buffer = Encoding.ASCII.GetBytes(JsonUtility.ToJson(this, true));
-                fs.Write(Buffer, 0, Buffer.Length);
+                byte[] buffer = Encoding.ASCII.GetBytes(JsonUtility.ToJson(this, true));
+                fs.Write(buffer, 0, buffer.Length);
             }
         }
 
@@ -72,14 +72,13 @@ namespace TwitchIntegrationPlugin.Serializables
 
                 //It didn't exist or there are no bans.
                 if (fs.Length == 0) return;
-                byte[] BannedSongBytes = new byte[fs.Length];
+                byte[] bannedSongBytes = new byte[fs.Length];
 
                 //This imposes a limit of 2,147,483,647 characters. Enough to not worry hopefully.
-                fs.Read(BannedSongBytes, 0, (int)fs.Length);
+                fs.Read(bannedSongBytes, 0, (int)fs.Length);
 
-                string BannedSongString = Encoding.ASCII.GetString(BannedSongBytes);
-                _bannedSongs = JsonUtility.FromJson<BanList>(BannedSongString).GetBanList();
-
+                string bannedSongString = Encoding.ASCII.GetString(bannedSongBytes);
+                _bannedSongs = JsonUtility.FromJson<BanList>(bannedSongString).GetBanList();
             }
         }
 

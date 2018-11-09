@@ -14,30 +14,23 @@ namespace TwitchIntegrationPlugin.UI
 {
     public class TwitchIntegrationUi : MonoBehaviour
     {
-        private RectTransform _mainMenuRectTransform;
-        public  MainMenuViewController MainMenuViewController;
+        
+        public LevelRequestFlowCoordinator LevelRequestFlowCoordinator { get; set; }
+        public MainMenuViewController MainMenuViewController;
 
+        private RectTransform _mainMenuRectTransform;
         private Button _buttonInstance;
         private Button _backButtonInstance;
         private GameObject _loadingIndicatorInstance;
-
-        public static TwitchIntegrationUi Instance;
-
-        public static List<Sprite> Icons = new List<Sprite>();
-
-        public LevelRequestFlowCoordinator LevelRequestFlowCoordinator { get; set; }
-
-        public static Dictionary<string, Sprite> CachedSprites = new Dictionary<string, Sprite>();
-
         private NLog.Logger _logger;
 
+        public static TwitchIntegrationUi Instance;
+        public static List<Sprite> Icons = new List<Sprite>();
+        public static Dictionary<string, Sprite> CachedSprites = new Dictionary<string, Sprite>();
 
         internal static void OnLoad()
         {
-            if(Instance != null)
-            {
-                return;
-            }
+            if (Instance != null) return;
             new GameObject("TwitchIntegration UI").AddComponent<TwitchIntegrationUi>();
         }
 
@@ -47,7 +40,7 @@ namespace TwitchIntegrationPlugin.UI
             _logger = NLog.LogManager.GetCurrentClassLogger();
             Instance = this;
             
-            foreach (var sprite in Resources.FindObjectsOfTypeAll<Sprite>())
+            foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
             {
                 Icons.Add(sprite);
             }
@@ -79,13 +72,12 @@ namespace TwitchIntegrationPlugin.UI
 
         private void CreateTwitchModeButton()
         {
-            var twitchModeButton = CreateUiButton(_mainMenuRectTransform, "QuitButton");
+            Button twitchModeButton = CreateUiButton(_mainMenuRectTransform, "QuitButton");
 
             try
             {
                 ((RectTransform) twitchModeButton.transform).anchoredPosition = new Vector2(4f, 68f);
                 ((RectTransform) twitchModeButton.transform).sizeDelta = new Vector2(34f, 10f);
-
                 SetButtonText(ref twitchModeButton, (StaticData.TwitchMode) ? "Twitch Mode: ON" : "Twitch Mode: OFF");
                 //SetButtonIcon(ref _twitchModeButton, icons.First(x => (x.name == "SettingsIcon")));
 
@@ -99,10 +91,9 @@ namespace TwitchIntegrationPlugin.UI
                     {
                         SetButtonText(ref twitchModeButton, "Twitch Mode: OFF");
                     }
-                    
-
                 });
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 _logger.Error(e);
             }
@@ -110,15 +101,13 @@ namespace TwitchIntegrationPlugin.UI
 
         private void CreateDebugButton()
         {
-            var debugButton = CreateUiButton(_mainMenuRectTransform, "QuitButton");
+            Button debugButton = CreateUiButton(_mainMenuRectTransform, "QuitButton");
 
             try
             {
                 ((RectTransform) debugButton.transform).anchoredPosition = new Vector2(40f, 68f);
                 ((RectTransform) debugButton.transform).sizeDelta = new Vector2(25f, 10f);
-
                 SetButtonText(ref debugButton, "Request Queue");
-
                 //SetButtonIcon(ref _debugButton, icons.First(x => (x.name == "SettingsIcon")));
 
                 debugButton.onClick.AddListener(delegate
@@ -150,7 +139,7 @@ namespace TwitchIntegrationPlugin.UI
                 return null;
             }
 
-            var button = Instantiate(_backButtonInstance, parent, false);
+            Button button = Instantiate(_backButtonInstance, parent, false);
             DestroyImmediate(button.GetComponent<SignalOnUIButtonClick>());
             button.onClick = new Button.ButtonClickedEvent();
 
@@ -159,8 +148,7 @@ namespace TwitchIntegrationPlugin.UI
 
         public GameObject CreateLoadingIndicator(Transform parent)
         {
-            GameObject indicator = Instantiate(_loadingIndicatorInstance, parent, false);
-            return indicator;
+            return Instantiate(_loadingIndicatorInstance, parent, false);
         }
 
         public Button CreateUiButton(RectTransform parent, string buttonTemplate)
@@ -170,7 +158,7 @@ namespace TwitchIntegrationPlugin.UI
                 return null;
             }
 
-            var btn = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonTemplate)), parent, false);
+            Button btn = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonTemplate)), parent, false);
             DestroyImmediate(btn.GetComponent<SignalOnUIButtonClick>());
             btn.onClick = new Button.ButtonClickedEvent();
 
@@ -191,7 +179,7 @@ namespace TwitchIntegrationPlugin.UI
 
         public TextMeshProUGUI CreateText(RectTransform parent, string text, Vector2 position)
         {
-            var textMesh = new GameObject("TextMeshProUGUI_GO").AddComponent<TextMeshProUGUI>();
+            TextMeshProUGUI textMesh = new GameObject("TextMeshProUGUI_GO").AddComponent<TextMeshProUGUI>();
             textMesh.rectTransform.SetParent(parent, false);
             textMesh.text = text;
             textMesh.fontSize = 4;
@@ -209,10 +197,8 @@ namespace TwitchIntegrationPlugin.UI
         {
             if (button.GetComponentInChildren<TextMeshProUGUI>() != null)
             {
-
                 button.GetComponentInChildren<TextMeshProUGUI>().text = text;
             }
-
         }
 
         public void SetButtonTextSize(ref Button button, float fontSize)
@@ -221,28 +207,22 @@ namespace TwitchIntegrationPlugin.UI
             {
                 button.GetComponentInChildren<TextMeshProUGUI>().fontSize = fontSize;
             }
-
-
         }
 
         public void SetButtonIcon(ref Button button, Sprite icon)
         {
             if (button.GetComponentsInChildren<Image>().Count() > 1)
             {
-
                 button.GetComponentsInChildren<Image>()[1].sprite = icon;
             }
-
         }
 
         public void SetButtonBackground(ref Button button, Sprite background)
         {
             if (button.GetComponentsInChildren<Image>().Any())
             {
-
                 button.GetComponentsInChildren<Image>()[0].sprite = background;
             }
-
         }
 
         public static IEnumerator LoadSprite(string spritePath, TableCell obj)
@@ -253,11 +233,11 @@ namespace TwitchIntegrationPlugin.UI
                 yield break;
             }
 
-            using (var www = new WWW(spritePath))
+            using (WWW www = new WWW(spritePath))
             {
                 yield return www;
-                var tex = www.texture;
-                var newSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.one * 0.5f, 100, 1);
+                Texture2D tex = www.texture;
+                Sprite newSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.one * 0.5f, 100, 1);
                 CachedSprites.Add(spritePath, newSprite);
                 obj.GetComponentsInChildren<Image>()[2].sprite = newSprite;
             }

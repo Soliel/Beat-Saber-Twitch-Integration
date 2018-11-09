@@ -23,7 +23,6 @@ namespace TwitchIntegrationPlugin.UI
         private QueuedSong _song;
         private CustomLevel _customLevel;
         private NLog.Logger _logger;
-
         private bool _initialized;
 
         public event Action DidFinishEvent;
@@ -66,14 +65,11 @@ namespace TwitchIntegrationPlugin.UI
             if (!_initialized)
             {
                 DidFinishEvent += Finish;
-                _levelRequestNavigationController.DidFinishEvent += HandleLevelRequestNavigationControllerDidfinish;
+                _levelRequestNavigationController.DidFinishEvent += HandleLevelRequestNavigationControllerDidFinish;
                 _levelDifficultyViewController.didSelectDifficultyEvent +=
                     HandleDifficultyViewControllerDidSelectDifficulty;
                 _levelDetailViewController.didPressPlayButtonEvent += HandleDetailViewControllerDidPressPlayButton;
-
-
-
-                _requestInfoViewController.DownloadButtonpressed += HandleDidPressDownloadButton;
+                _requestInfoViewController.DownloadButtonPressed += HandleDidPressDownloadButton;
                 _requestInfoViewController.SkipButtonPressed += HandleDidPressSkipButton;
 
                 _initialized = true;
@@ -83,7 +79,6 @@ namespace TwitchIntegrationPlugin.UI
             parentViewController.PresentModalViewController(_levelRequestNavigationController, null,
                 StaticData.DidStartFromQueue);
             _requestInfoViewController.Init("Default Song Name", "Default User");
-
             _levelRequestNavigationController.PushViewController(_requestInfoViewController, true);
 
             if (!fromDebug) return; //Loading song preview arrests control from the results controller, causing it to display improperly. 
@@ -95,17 +90,16 @@ namespace TwitchIntegrationPlugin.UI
             if (!_initialized) return;
 
             DidFinishEvent -= Finish;
-            _levelRequestNavigationController.DidFinishEvent -= HandleLevelRequestNavigationControllerDidfinish;
+            _levelRequestNavigationController.DidFinishEvent -= HandleLevelRequestNavigationControllerDidFinish;
             _levelDifficultyViewController.didSelectDifficultyEvent -=
                 HandleDifficultyViewControllerDidSelectDifficulty;
             _levelDetailViewController.didPressPlayButtonEvent -= HandleDetailViewControllerDidPressPlayButton;
-            _requestInfoViewController.DownloadButtonpressed -= HandleDidPressDownloadButton;
+            _requestInfoViewController.DownloadButtonPressed -= HandleDidPressDownloadButton;
             _requestInfoViewController.SkipButtonPressed -= HandleDidPressSkipButton;
-
             _initialized = false;
         }
 
-        private void HandleLevelRequestNavigationControllerDidfinish(LevelRequestNavigationController viewController)
+        private void HandleLevelRequestNavigationControllerDidFinish(LevelRequestNavigationController viewController)
         {
             viewController.DismissModalViewController(null);
             DidFinishEvent?.Invoke();
@@ -119,7 +113,7 @@ namespace TwitchIntegrationPlugin.UI
             {
                 _levelDetailViewController.Init(
                     _customLevel.GetDifficultyLevel(_levelDifficultyViewController.selectedDifficultyLevel.difficulty),
-                    GameplayMode.SoloStandard, StandardLevelDetailViewController.LeftPanelViewControllerType.HowToPlay);
+                    GameplayMode.SoloStandard, StandardLevelDetailViewController.LeftPanelViewControllerType.GameplayOptions);
                 _levelRequestNavigationController.PushViewController(_levelDetailViewController,
                     viewController.isRebuildingHierarchy);
             }
@@ -137,7 +131,7 @@ namespace TwitchIntegrationPlugin.UI
             StaticData.SongQueue.PopQueuedSong();
             Finish();
 
-            _mainGameSceneSetupData.Init(_levelDetailViewController.difficultyLevel, GameplayOptions.defaultOptions, GameplayMode.SoloStandard, 0f);
+            _mainGameSceneSetupData.Init(_levelDetailViewController.difficultyLevel, viewController.gameplayOptions, GameplayMode.SoloStandard, 0f);
             _mainGameSceneSetupData.didFinishEvent += HandleMainGameSceneDidFinish;
             _mainGameSceneSetupData.TransitionToScene(0.7f);
         }
@@ -162,7 +156,7 @@ namespace TwitchIntegrationPlugin.UI
             _requestInfoViewController.Init("Default song", "Default Requestor");
             _levelRequestNavigationController.PushViewController(_requestInfoViewController);
             StaticData.SongQueue.PopQueuedSong();
-            _song = StaticData.SongQueue.PeekQueuedSong();
+            //_song = StaticData.SongQueue.PeekQueuedSong();
             CheckQueueAndUpdate();
         }
 
@@ -186,14 +180,13 @@ namespace TwitchIntegrationPlugin.UI
 
             _requestInfoViewController.SetDownloadButtonText("Downloaded");
             _requestInfoViewController.SetDownloadState(false);
-
             _customLevel = SongLoader.CustomLevels.Find(x => x.levelID.Contains(_song.SongHash));
 
             SongLoader.Instance.LoadAudioClipForLevel(_customLevel, (level) =>
             {
                 try
                 {
-                    var songPreviewPlayer = Resources.FindObjectsOfTypeAll<SongPreviewPlayer>().First();
+                    SongPreviewPlayer songPreviewPlayer = Resources.FindObjectsOfTypeAll<SongPreviewPlayer>().First();
                     songPreviewPlayer.CrossfadeTo(_customLevel.audioClip, _customLevel.previewStartTime,
                         _customLevel.previewDuration);
                 }
@@ -219,8 +212,8 @@ namespace TwitchIntegrationPlugin.UI
             if (TwitchIntegrationUi.Instance.LevelRequestFlowCoordinator == null)
             {
                 TwitchIntegrationUi.Instance.LevelRequestFlowCoordinator = new GameObject("Twitch Integration Coordinator").AddComponent<LevelRequestFlowCoordinator>();
-            } 
-                
+            }
+
             FindObjectOfType<LevelRequestFlowCoordinator>().OnMenuLoaded();
         }
 
@@ -238,7 +231,6 @@ namespace TwitchIntegrationPlugin.UI
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<MainMenuViewController>().Any());
             _logger.Debug("Wait over~");
 
-            
             VRUIViewController parent = FindObjectOfType<MainMenuViewController>();
             try
             {
@@ -253,6 +245,8 @@ namespace TwitchIntegrationPlugin.UI
                 _logger.Error(e);
             }
 
+            _logger.Debug(StaticData.SongQueue.DoesQueueHaveSongs());
+            _logger.Debug(StaticData.TwitchMode);
             if (StaticData.SongQueue.DoesQueueHaveSongs() && StaticData.TwitchMode)
             {
                 try
@@ -292,15 +286,32 @@ namespace TwitchIntegrationPlugin.UI
             _resultsFlowCoordinator.Present(parentViewController, StaticData.LastLevelCompletionResults, StaticData.LastLevelPlayed,
                 GameplayOptions.defaultOptions, GameplayMode.SoloStandard);
             StaticData.LastLevelCompletionResults = null;
+            StaticData.DidStartFromQueue = false;
             StartCoroutine(WaitForResults());
         }
 
         public IEnumerator WaitForResults()
         {
-            if (!StaticData.TwitchMode || !StaticData.SongQueue.DoesQueueHaveSongs()) yield break;
             _logger.Debug("Waiting for contoller to init.");
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ResultsViewController>().Any());
-            var results = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
+            ResultsViewController results = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
+
+            results.restartButtonPressedEvent += delegate
+            {
+                _logger.Debug("restart button pressed!");
+                StaticData.DidStartFromQueue = true;
+                try
+                {
+                    _mainGameSceneSetupData = Resources.FindObjectsOfTypeAll<MainGameSceneSetupData>().First();
+                }
+                catch (Exception e)
+                {
+                    _logger.Debug(e.ToString);
+                }
+                _mainGameSceneSetupData.didFinishEvent += HandleMainGameSceneDidFinish;
+            };
+
+            if(StaticData.TwitchMode && StaticData.SongQueue.DoesQueueHaveSongs())
 
             results.continueButtonPressedEvent += delegate(ResultsViewController viewController)
             {
@@ -318,8 +329,6 @@ namespace TwitchIntegrationPlugin.UI
                     FindObjectOfType<StandardLevelSelectionFlowCoordinator>().Finish();
 
                     Present(FindObjectOfType<MainMenuViewController>(), true);
-                    StaticData.LastLevelCompletionResults = null;
-                    StaticData.DidStartFromQueue = false;
                 }
                 catch (Exception e)
                 {
@@ -327,10 +336,7 @@ namespace TwitchIntegrationPlugin.UI
                 }
             };
 
-            results.restartButtonPressedEvent += delegate(ResultsViewController viewController)
-                {
-                    StaticData.DidStartFromQueue = true;
-                };
+            
         }
     }
 }

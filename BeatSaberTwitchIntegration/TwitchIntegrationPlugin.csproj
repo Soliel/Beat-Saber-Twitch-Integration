@@ -26,7 +26,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>D:\Steam\steamapps\common\Beat Saber\Plugins\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -41,15 +41,21 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="APIConnection.cs" />
     <Compile Include="BeatBotNew.cs" />
     <Compile Include="BeatSaver.cs" />
-    <Compile Include="Commands\CommandAddToQueue.cs" />
+    <Compile Include="Commands\BanSongCommand.cs" />
+    <Compile Include="Commands\AddToQueueCommand.cs" />
+    <Compile Include="Commands\ClearQueueCommand.cs" />
     <Compile Include="Commands\IrcCommand.cs" />
+    <Compile Include="Commands\PatCommand.cs" />
+    <Compile Include="Commands\PrintBanListCommand.cs" />
     <Compile Include="Commands\PrintQueueCommand.cs" />
-    <Compile Include="Commands\RemoveSongFromQueue.cs" />
+    <Compile Include="Commands\RemoveFromQueueCommand.cs" />
+    <Compile Include="Commands\SaveQueueCommand.cs" />
     <Compile Include="Serializables\BanList.cs" />
     <Compile Include="Serializables\config.cs" />
     <Compile Include="Serializables\SongQueue.cs" />
@@ -100,8 +106,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Serializables\QueuedSong.cs" />
-    <Compile Include="RequestQueueController.cs" />
-    <Compile Include="RequestQueueTableCell.cs" />
     <Compile Include="StaticData.cs" />
     <Compile Include="TwitchIntegrationPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -143,8 +147,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="SongLoaderPlugin">
-      <HintPath>..\..\Resources\SongLoaderPlugin.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\SongLoaderPlugin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />

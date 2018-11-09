@@ -27,12 +27,12 @@ namespace TwitchIntegrationPlugin.Serializables
             RandomizeLimit = randomizelimit;
         }
 
-        public void SaveJSON()
+        public void SaveJson()
         {
             using (FileStream fs = new FileStream("UserData/TwitchIntegrationConfig.json", FileMode.Create, FileAccess.Write))
             {
-                byte[] Buffer = Encoding.ASCII.GetBytes(JsonUtility.ToJson(this, true));
-                fs.Write(Buffer, 0, Buffer.Length);
+                byte[] buffer = Encoding.ASCII.GetBytes(JsonUtility.ToJson(this, true));
+                fs.Write(buffer, 0, buffer.Length);
             }
         }
 
@@ -49,16 +49,19 @@ namespace TwitchIntegrationPlugin.Serializables
                     return tempConfig;
                 }
             }
-            else
-            {
-                CreateDefaultConfig();
-                return null;
-            }
+
+            CreateDefaultConfig();
+            return null;
         }
 
-        private void CreateDefaultConfig()
+        public static void CreateDefaultConfig()
         {
-            new Config(false, false, 3, 5, true, false, 0).SaveJSON();
+            new Config(false, false, 3, 5, true, false, 0).SaveJson();
+        }
+
+        public override string ToString()
+        {
+            return JsonUtility.ToJson(this);
         }
     }
 }

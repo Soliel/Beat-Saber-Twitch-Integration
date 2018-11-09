@@ -39,32 +39,32 @@ namespace TwitchIntegrationPlugin
                 TwitchConnection.Instance.SendChatMessage("Error downloading song metadata.");
                 return resultSong;
             }
-            else
+
+            byte[] data = www.downloadHandler.data;
+            string responseString = Encoding.UTF8.GetString(data);
+
+            if (responseString == "{}" || responseString.Length == 0 || responseString == "{\"songs\":[],\"total\":0}")
             {
-                byte[] data = www.downloadHandler.data;
-                string responseString = Encoding.UTF8.GetString(data);
-
-                if (responseString == "{}" || responseString.Length == 0 || responseString == "{\"songs\":[],\"total\":0}")
-                {
-                    TwitchConnection.Instance.SendChatMessage("Invalid Request");
-                    return resultSong;
-                }
-
-                JSONNode node = JSON.Parse(responseString);
-                node = isTextQuery ? node["songs"][0] : node["song"];
-
-                resultSong = new QueuedSong(
-                    node["songName"],
-                    node["name"],
-                    node["authorName"],
-                    node["bpm"],
-                    node["key"],
-                    node["songSubName"],
-                    node["downloadUrl"],
-                    requestedBy,
-                    node["coverUrl"],
-                    node["hashMd5"]);
+                TwitchConnection.Instance.SendChatMessage("Invalid Request");
+                return resultSong;
             }
+
+            JSONNode node = JSON.Parse(responseString);
+            node = isTextQuery ? node["songs"][0] : node["song"];
+
+            resultSong = new QueuedSong(
+                node["songName"],
+                node["name"],
+                node["authorName"],
+                node["bpm"],
+                node["key"],
+                node["songSubName"],
+                node["downloadUrl"],
+                requestedBy,
+                node["coverUrl"],
+                node["hashMd5"]
+           );
+
             Console.WriteLine(resultSong);
             return resultSong;
         }

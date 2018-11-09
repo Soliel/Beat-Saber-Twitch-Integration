@@ -16,7 +16,6 @@ namespace TwitchIntegrationPlugin.UI
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
             if (activationType != ActivationType.AddedToHierarchy) return;
-
             _ui = TwitchIntegrationUi.Instance;
 
             if (_backButtonObject == null)
@@ -25,7 +24,6 @@ namespace TwitchIntegrationPlugin.UI
             }
 
             _backButtonObject.gameObject.SetActive(true);
-
             _backButtonObject.onClick.AddListener(DismissButtonWasPressed);
         }
 

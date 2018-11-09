@@ -21,19 +21,18 @@ namespace TwitchIntegrationPlugin.UI
     {
 
         private bool _initialized;
-
         private TwitchIntegrationUi _ui;
         private TextMeshProUGUI _songName;
-        private TextMeshProUGUI _requestorName;
+        private TextMeshProUGUI _requesterName;
         private Button _downloadButton;
         private Button _skipButton;
         private Logger _logger;
         private string _songTitle;
-        private string _requestorNameString;
+        private string _requesterNameString;
         private QueuedSong _queuedSong;
 
         public event Action SkipButtonPressed;
-        public event Action DownloadButtonpressed;
+        public event Action DownloadButtonPressed;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
@@ -47,16 +46,15 @@ namespace TwitchIntegrationPlugin.UI
             else
                 _songName.SetText(_songTitle);
 
-            if (_requestorName == null)
+            if (_requesterName == null)
             {
-                _requestorName = _ui.CreateText(rectTransform, "Requested By:\n" + _requestorNameString, new Vector2(0f, 0f));
-                _requestorName.fontSize = 4f;
-                _requestorName.rectTransform.anchorMin = new Vector2(0.2f, 0.4f);
-                _requestorName.rectTransform.anchorMax = new Vector2(0.8f, 0.5f);
-
+                _requesterName = _ui.CreateText(rectTransform, "Requested By:\n" + _requesterNameString, new Vector2(0f, 0f));
+                _requesterName.fontSize = 4f;
+                _requesterName.rectTransform.anchorMin = new Vector2(0.2f, 0.4f);
+                _requesterName.rectTransform.anchorMax = new Vector2(0.8f, 0.5f);
             }
             else
-                _requestorName.SetText("Requested By:\n" + _requestorNameString);
+                _requesterName.SetText("Requested By:\n" + _requesterNameString);
 
             if (_skipButton == null)
             {
@@ -69,27 +67,25 @@ namespace TwitchIntegrationPlugin.UI
                 _skipButton.onClick.AddListener(OnSkipButtonPressed);
             }
 
-            if (_downloadButton == null)
-            {
-                _downloadButton = _ui.CreateUiButton(rectTransform, "ApplyButton");
-                ((RectTransform)_downloadButton.transform).anchorMin = new Vector2(0f, 0.1f);
-                ((RectTransform)_downloadButton.transform).anchorMax = new Vector2(0.4f, 0.2f);
-                ((RectTransform)_downloadButton.transform).sizeDelta = new Vector2(0f, 0f);
-                ((RectTransform)_downloadButton.transform).anchoredPosition = new Vector2(5f, 0f);
-                _ui.SetButtonText(ref _downloadButton, "Download");
-                _downloadButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = _downloadButton.GetComponentInChildren<TextMeshProUGUI>().fontSize - 0.3f;
-                _downloadButton.onClick.AddListener(OnDownloadButtonPressed);
-            }
+            if (_downloadButton != null) return;
+
+            _downloadButton = _ui.CreateUiButton(rectTransform, "ApplyButton");
+            ((RectTransform)_downloadButton.transform).anchorMin = new Vector2(0f, 0.1f);
+            ((RectTransform)_downloadButton.transform).anchorMax = new Vector2(0.4f, 0.2f);
+            ((RectTransform)_downloadButton.transform).sizeDelta = new Vector2(0f, 0f);
+            ((RectTransform)_downloadButton.transform).anchoredPosition = new Vector2(5f, 0f);
+            _ui.SetButtonText(ref _downloadButton, "Download");
+            _downloadButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = _downloadButton.GetComponentInChildren<TextMeshProUGUI>().fontSize - 0.3f;
+            _downloadButton.onClick.AddListener(OnDownloadButtonPressed);
 
         }
 
-        public void Init(string songName, string requestorName)
+        public void Init(string songName, string requesterName)
         {
             _ui = TwitchIntegrationUi.Instance;
             _logger = LogManager.GetCurrentClassLogger();
             _songTitle = songName;
-            _requestorNameString = requestorName;
-            
+            _requesterNameString = requesterName;
 
             _initialized = true;
         }
@@ -98,7 +94,7 @@ namespace TwitchIntegrationPlugin.UI
         {
             if (!_initialized) return;
             _songName.SetText(song.BeatName);
-            _requestorName.SetText("Requested By:\n" + song.RequestedBy);
+            _requesterName.SetText("Requested By:\n" + song.RequestedBy);
         }
 
         private void OnSkipButtonPressed()
@@ -108,7 +104,7 @@ namespace TwitchIntegrationPlugin.UI
 
         private void OnDownloadButtonPressed()
         {
-            DownloadButtonpressed?.Invoke();
+            DownloadButtonPressed?.Invoke();
         }
 
         public IEnumerator DownloadSongCoroutine(QueuedSong song)
@@ -118,12 +114,12 @@ namespace TwitchIntegrationPlugin.UI
             _skipButton.interactable = false;
 
             _logger.Debug("Web Request sent to: " + song.DownloadUrl);
-            var www = UnityWebRequest.Get(song.DownloadUrl);
+            UnityWebRequest www = UnityWebRequest.Get(song.DownloadUrl);
 
-            var timeout = false;
-            var time = 0f;
+            bool timeout = false;
+            float time = 0f;
 
-            var asyncRequest = www.SendWebRequest();
+            UnityWebRequestAsyncOperation asyncRequest = www.SendWebRequest();
 
             while (!asyncRequest.isDone || asyncRequest.progress < 1f)
             {
@@ -145,22 +141,24 @@ namespace TwitchIntegrationPlugin.UI
             }
             else
             {
-                var zipPath = "";
-                var customSongsPath = "";
+                string zipPath = "";
+                string customSongsPath = "";
                 try
                 {
                     _logger.Debug("Download complete in: " + time);
-                    var data = www.downloadHandler.data;
+                    byte[] data = www.downloadHandler.data;
 
-                    var docPath = Application.dataPath;
+                    string docPath = Application.dataPath;
                     docPath = docPath.Substring(0, docPath.Length - 5);
                     docPath = docPath.Substring(0, docPath.LastIndexOf("/", StringComparison.Ordinal));
                     customSongsPath = docPath + "/CustomSongs/" + song.Id + "/";
                     zipPath = customSongsPath + song.Id + ".zip";
+
                     if (!Directory.Exists(customSongsPath))
                     {
                         Directory.CreateDirectory(customSongsPath);
                     }
+
                     File.WriteAllBytes(zipPath, data);
                 }
                 catch (Exception e)
@@ -171,7 +169,7 @@ namespace TwitchIntegrationPlugin.UI
                     _ui.SetButtonText(ref _downloadButton, "Download");
                 }
 
-                var zip = new FastZip();
+                FastZip zip = new FastZip();
                 zip.ExtractZip(zipPath, customSongsPath, null);
                 try
                 {

@@ -16,9 +16,9 @@ namespace TwitchIntegrationPlugin
 
         public static QueuedSong GetSongFromBeatSaver(bool isTextSearch, string queryString, string requestedBy)
         {
-            var apiPath = isTextSearch ? "{0}/api/songs/search/all/{1}" : "{0}/api/songs/detail/{1}";
+            string apiPath = isTextSearch ? "{0}/api/songs/search/all/{1}" : "{0}/api/songs/detail/{1}";
 
-            var webRequest = (HttpWebRequest)WebRequest.Create(string.Format(apiPath, BeatSaver, queryString));
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(string.Format(apiPath, BeatSaver, queryString));
             webRequest.Method = "GET";
             webRequest.ContentType = "application/json";
             ServicePointManager.ServerCertificateValidationCallback = MyRemoteCertificateValidationCallback;
@@ -26,9 +26,9 @@ namespace TwitchIntegrationPlugin
             string result;
             try
             {
-                var enc = Encoding.GetEncoding("utf-8");
-                var webResponse = (HttpWebResponse)webRequest.GetResponse();
-                var responseStream = new StreamReader(webResponse.GetResponseStream() ?? throw new NoNullAllowedException(), enc);
+                Encoding enc = Encoding.GetEncoding("utf-8");
+                HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
+                StreamReader responseStream = new StreamReader(webResponse.GetResponseStream() ?? throw new NoNullAllowedException(), enc);
                 result = responseStream.ReadToEnd();
                 webResponse.Close();
             }
@@ -43,7 +43,7 @@ namespace TwitchIntegrationPlugin
                 return new QueuedSong();
             }
 
-            var node = JSON.Parse(result);
+            JSONNode node = JSON.Parse(result);
             node = isTextSearch ? node["songs"][0] : node["song"];
 
             return new QueuedSong(
@@ -56,18 +56,18 @@ namespace TwitchIntegrationPlugin
                 node["downloadUrl"],
                 requestedBy,
                 node["coverUrl"],
-                node["hashMd5"]
+                node["hashMd5"].Value.ToUpper()
             );
         }
 
         private static bool MyRemoteCertificateValidationCallback(object sender,
             X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            var isOk = true;
+            bool isOk = true;
             // If there are errors in the certificate chain,
             // look at each error to determine the cause.
             if (sslPolicyErrors == SslPolicyErrors.None) return true;
-            foreach (var t in chain.ChainStatus)
+            foreach (X509ChainStatus t in chain.ChainStatus)
             {
                 if (t.Status == X509ChainStatusFlags.RevocationStatusUnknown)
                 {
@@ -79,7 +79,7 @@ namespace TwitchIntegrationPlugin
                 chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
                 chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllFlags;
 
-                var chainIsValid = chain.Build((X509Certificate2)certificate);
+                bool chainIsValid = chain.Build((X509Certificate2)certificate);
                 if (chainIsValid) continue;
 
                 isOk = false;

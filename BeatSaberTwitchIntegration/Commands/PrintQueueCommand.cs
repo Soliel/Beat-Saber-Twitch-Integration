@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using AsyncTwitch;
 using TwitchIntegrationPlugin.Serializables;
 
 namespace TwitchIntegrationPlugin.Commands
 {
-    class PrintQueueCommand : IrcCommand
+    public class PrintQueueCommand : IrcCommand
     {
         public override string[] CommandAlias => new[] {"queue", "songlist", "q", "gimmesongies", "awooque", "showmehell"};
         public override void Run(TwitchMessage msg)
@@ -18,14 +14,17 @@ namespace TwitchIntegrationPlugin.Commands
             string msgString = "[Current Songs in Queue]: ";
             foreach (QueuedSong song in songList)
             {
-                if (msgString.Length + song.SongName.Length + 2 > 498)
+                if (msgString.Length + song.SongName.Length + 2 > 496)
                 {
                     TwitchConnection.Instance.SendChatMessage(msgString);
                     msgString = "";
                 }
                 msgString += song.SongName + ", ";
+            }
 
-
+            if (msgString.Length > 0)
+            {
+                TwitchConnection.Instance.SendChatMessage(msgString);
             }
         }
     }

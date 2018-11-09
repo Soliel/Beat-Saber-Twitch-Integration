@@ -1,8 +1,8 @@
-﻿using System;
-using IllusionPlugin;
+﻿using IllusionPlugin;
 using NLog;
+using NLog.Config;
+using NLog.Targets;
 using TwitchIntegrationPlugin.UI;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace TwitchIntegrationPlugin
@@ -13,27 +13,29 @@ namespace TwitchIntegrationPlugin
         public string Name => "Beat Saber Twitch Integration";
         public string Version => "2.0.2_bs-0.11.2";
         private static BeatBotNew _bot;
-
+        
         public void OnApplicationStart()
         {
             StaticData.TwitchMode = false;
 
-            var nlogconfig = new NLog.Config.LoggingConfiguration();
+            LoggingConfiguration nLogConfig = new LoggingConfiguration();
 
-            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = "TILog.txt" };
-            var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
+            FileTarget logFile = new FileTarget("logfile") { FileName = "TILog.txt" };
+            ConsoleTarget logConsole = new ConsoleTarget("logconsole");
 
-            nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
-            nlogconfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
-            LogManager.Configuration = nlogconfig;
+            nLogConfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logConsole);
+            nLogConfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logFile);
+            LogManager.Configuration = nLogConfig;
             
-            Console.WriteLine("Starting BeatBot");
-
             _bot = new BeatBotNew();
         }
 
         public void OnApplicationQuit()
         {
+            if(StaticData.Config.ContinueQueue)
+                StaticData.SongQueue.SaveSongQueue();
+
+            StaticData.BanList.SaveBanList();
         }
 
         public void OnLevelWasLoaded(int level)
@@ -46,7 +48,6 @@ namespace TwitchIntegrationPlugin
 
         public void OnLevelWasInitialized(int level)
         {
-        
         }
 
         public void OnUpdate()
