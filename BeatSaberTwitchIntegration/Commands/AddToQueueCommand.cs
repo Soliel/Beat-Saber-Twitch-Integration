@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using AsyncTwitch;
 using JetBrains.Annotations;
 using TwitchIntegrationPlugin.Serializables;
@@ -9,7 +8,7 @@ namespace TwitchIntegrationPlugin.Commands
     [UsedImplicitly]
     public class AddToQueueCommand : IrcCommand
     {
-        public override string[] CommandAlias => new [] {"bsr", "add", "kloudr", "gib", "gibsong"};
+        public override string[] CommandAlias => new [] {"bsr", "add", "kloudr", "gib", "gibsong", "tomato", "awoo"};
         private readonly Regex _songIdrx = new Regex(@"^[0-9\-]+$", RegexOptions.Compiled);
         
         public override void Run(TwitchMessage msg)

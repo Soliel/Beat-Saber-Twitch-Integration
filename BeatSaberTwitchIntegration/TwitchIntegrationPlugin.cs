@@ -23,8 +23,8 @@ namespace TwitchIntegrationPlugin
             FileTarget logFile = new FileTarget("logfile") { FileName = "TILog.txt" };
             ConsoleTarget logConsole = new ConsoleTarget("logconsole");
 
-            nLogConfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logConsole);
-            nLogConfig.AddRule(LogLevel.Debug, LogLevel.Fatal, logFile);
+            nLogConfig.AddRule(LogLevel.Trace, LogLevel.Fatal, logConsole);
+            nLogConfig.AddRule(LogLevel.Trace, LogLevel.Fatal, logFile);
             LogManager.Configuration = nLogConfig;
             
             _bot = new BeatBotNew();
