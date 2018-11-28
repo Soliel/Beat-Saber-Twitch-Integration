@@ -16,6 +16,6 @@ namespace TwitchIntegrationPlugin
         public static Config Config = new Config(false, false, 0, 0, false, false, 0);
         public static bool DidStartFromQueue = false;
         public static LevelCompletionResults LastLevelCompletionResults;
-        public static IStandardLevelDifficultyBeatmap LastLevelPlayed;
+        public static IDifficultyBeatmap LastLevelPlayed;
     }
 }

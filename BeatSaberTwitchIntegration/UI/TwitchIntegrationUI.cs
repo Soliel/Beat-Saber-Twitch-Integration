@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using HMUI;
 using JetBrains.Annotations;
+using SongLoaderPlugin;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUI;
 using Image = UnityEngine.UI.Image;
@@ -14,10 +16,25 @@ namespace TwitchIntegrationPlugin.UI
 {
     public class TwitchIntegrationUi : MonoBehaviour
     {
-        
-        public LevelRequestFlowCoordinator LevelRequestFlowCoordinator { get; set; }
-        public MainMenuViewController MainMenuViewController;
+        #region Static UI Components
+        public static MenuSceneSetupDataSO MenuSceneSetupData;
+        public static PlayerDataModelSO PlayerDataModel;
+        public static PlatformLeaderboardsModel PlatformLeaderboardsModel;
+        public static PlatformLeaderboardViewController PlatformLeaderboardViewController;
+        public static DismissableNavigationController NavigationController;
+        public static BeatmapDifficultyViewController DifficultyViewController;
+        public static GameplaySetupViewController SetupViewController;
+        public static MainMenuViewController MainMenuViewController;
+        public static StandardLevelDetailViewController LevelDetailViewController;
+        public static GameplaySetupViewController GameplaySetupViewController;
+        public static RequestInfoViewController RequestInfoViewController;
+        public static PracticeViewController PracticeViewController;
+        public static ResultsViewController ResultsViewController;
+        public static MainFlowCoordinator MainFlowCoordinator;
+        #endregion
 
+        public LevelRequestFlowCoordinatorNew LevelRequestFlowCoordinator { get; set; }
+        
         private RectTransform _mainMenuRectTransform;
         private Button _buttonInstance;
         private Button _backButtonInstance;
@@ -39,6 +56,7 @@ namespace TwitchIntegrationPlugin.UI
         {
             _logger = NLog.LogManager.GetCurrentClassLogger();
             Instance = this;
+            _logger.Trace("Waking up.");
             
             foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
             {
@@ -47,11 +65,13 @@ namespace TwitchIntegrationPlugin.UI
 
             try
             {
+                FindUIComponents();
+                _logger.Trace("Adding buttons.");
                 _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
                 _backButtonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "BackArrowButton"));
-                MainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
-                _mainMenuRectTransform = _buttonInstance.transform.parent as RectTransform;
-                _loadingIndicatorInstance = Resources.FindObjectsOfTypeAll<GameObject>().First(x => x.name == "LoadingIndicator");
+                _mainMenuRectTransform = _buttonInstance.transform.parent.parent as RectTransform;
+                //_loadingIndicatorInstance = Resources.FindObjectsOfTypeAll<GameObject>().First(x => x.name == "LoadingIndicator");
+                
             }
             catch (Exception e)
             {
@@ -76,22 +96,12 @@ namespace TwitchIntegrationPlugin.UI
 
             try
             {
-                ((RectTransform) twitchModeButton.transform).anchoredPosition = new Vector2(4f, 68f);
+                ((RectTransform) twitchModeButton.transform).anchoredPosition = new Vector2(20f, 60f);
                 ((RectTransform) twitchModeButton.transform).sizeDelta = new Vector2(34f, 10f);
                 SetButtonText(ref twitchModeButton, (StaticData.TwitchMode) ? "Twitch Mode: ON" : "Twitch Mode: OFF");
-                //SetButtonIcon(ref _twitchModeButton, icons.First(x => (x.name == "SettingsIcon")));
+                twitchModeButton.onClick = new Button.ButtonClickedEvent();
 
-                twitchModeButton.onClick.AddListener(delegate
-                {
-                    StaticData.TwitchMode = !StaticData.TwitchMode;
-                    if (StaticData.TwitchMode)
-                    {
-                        SetButtonText(ref twitchModeButton, "Twitch Mode: ON");
-                    } else
-                    {
-                        SetButtonText(ref twitchModeButton, "Twitch Mode: OFF");
-                    }
-                });
+                twitchModeButton.onClick.AddListener(() => TwitchModeListener(twitchModeButton));
             }
             catch (Exception e)
             {
@@ -101,34 +111,52 @@ namespace TwitchIntegrationPlugin.UI
 
         private void CreateDebugButton()
         {
-            Button debugButton = CreateUiButton(_mainMenuRectTransform, "QuitButton");
+            Button queueButton = CreateUiButton(_mainMenuRectTransform, "QuitButton");
 
             try
             {
-                ((RectTransform) debugButton.transform).anchoredPosition = new Vector2(40f, 68f);
-                ((RectTransform) debugButton.transform).sizeDelta = new Vector2(25f, 10f);
-                SetButtonText(ref debugButton, "Request Queue");
-                //SetButtonIcon(ref _debugButton, icons.First(x => (x.name == "SettingsIcon")));
+                ((RectTransform)queueButton.transform).anchoredPosition = new Vector2(53f, 60f);
+                ((RectTransform)queueButton.transform).sizeDelta = new Vector2(30f, 10f);
+                SetButtonText(ref queueButton, "Request Queue");
+                queueButton.onClick = new Button.ButtonClickedEvent();
 
-                debugButton.onClick.AddListener(delegate
-                {
-                    try
-                    {
-                        if (LevelRequestFlowCoordinator == null)
-                        {
-                            LevelRequestFlowCoordinator = new GameObject("Twitch Integration Coordinator").AddComponent<LevelRequestFlowCoordinator>();
-                        }
-                        LevelRequestFlowCoordinator.Present(MainMenuViewController, true);
-                    }
-                    catch(Exception e)
-                    {
-                        _logger.Error(e);
-                    }
-                });
+                queueButton.onClick.AddListener(() => QueueButtonListener());
             }
             catch (Exception e)
             {
                 _logger.Error(e);
+            }
+        }
+
+        public void QueueButtonListener()
+        {
+            _logger.Debug("Clicked");
+            /*try
+            {
+                if (LevelRequestFlowCoordinator == null)
+                {
+                    _logger.Trace("Creating LevelRequestFlowCoordinator");
+                    LevelRequestFlowCoordinator = new GameObject("Twitch Integration Coordinator").AddComponent<LevelRequestFlowCoordinatorNew>();
+                }
+                _logger.Trace("presenting.");
+                MainFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] {LevelRequestFlowCoordinator, null, false, false });
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+            }*/
+        }
+
+        public void TwitchModeListener(Button twitchModeButton)
+        {
+            StaticData.TwitchMode = !StaticData.TwitchMode;
+            if (StaticData.TwitchMode)
+            {
+                SetButtonText(ref twitchModeButton, "Twitch Mode: ON");
+            }
+            else
+            {
+                SetButtonText(ref twitchModeButton, "Twitch Mode: OFF");
             }
         }
 
@@ -165,9 +193,9 @@ namespace TwitchIntegrationPlugin.UI
             return btn;
         }
 
-        public T CreateViewController<T>(string objName) where T : VRUIViewController
+        public static T CreateViewController<T>(string objName) where T : VRUIViewController
         {
-            var vc = new GameObject(objName).AddComponent<T>();
+            T vc = new GameObject(objName).AddComponent<T>();
 
             vc.rectTransform.anchorMin = new Vector2(0f, 0f);
             vc.rectTransform.anchorMax = new Vector2(1f, 1f);
@@ -243,5 +271,47 @@ namespace TwitchIntegrationPlugin.UI
             }
         }
 
+
+
+        public static void FindUIComponents()
+        {
+            MenuSceneSetupData = null;
+            PlayerDataModel = null;
+            PlatformLeaderboardsModel = null;
+            NavigationController = null;
+            DifficultyViewController = null;
+            SetupViewController = null;
+            MainMenuViewController = null;
+            LevelDetailViewController = null;
+            PlatformLeaderboardViewController = null;
+            GameplaySetupViewController = null;
+            PracticeViewController = null;
+            ResultsViewController = null;
+            MainFlowCoordinator = null;
+
+            if (RequestInfoViewController == null)
+            {
+                RequestInfoViewController = CreateViewController<RequestInfoViewController>("RequestController");
+                RequestInfoViewController.rectTransform.anchorMin = new Vector2(0.3f, 0f);
+                RequestInfoViewController.rectTransform.anchorMax = new Vector2(0.7f, 1f);
+            }
+
+            foreach (GameObject rootGameObject in SceneManager.GetSceneByName("menu").GetRootGameObjects())
+            {
+                MenuSceneSetupData = MenuSceneSetupData ?? rootGameObject.GetComponentInChildren<MenuSceneSetupDataSO>();
+                PlayerDataModel = PlayerDataModel ?? rootGameObject.GetComponentInChildren<PlayerDataModelSO>();
+                PlatformLeaderboardsModel = PlatformLeaderboardsModel ?? rootGameObject.GetComponentInChildren<PlatformLeaderboardsModel>();
+                NavigationController = NavigationController ?? rootGameObject.GetComponentInChildren<DismissableNavigationController>();
+                DifficultyViewController = DifficultyViewController ?? rootGameObject.GetComponentInChildren<BeatmapDifficultyViewController>();
+                SetupViewController = SetupViewController ?? rootGameObject.GetComponentInChildren<GameplaySetupViewController>();
+                MainMenuViewController = MainMenuViewController ?? rootGameObject.GetComponentInChildren<MainMenuViewController>();
+                LevelDetailViewController = LevelDetailViewController ?? rootGameObject.GetComponentInChildren<StandardLevelDetailViewController>();
+                PlatformLeaderboardViewController = PlatformLeaderboardViewController ?? rootGameObject.GetComponentInChildren<PlatformLeaderboardViewController>();
+                GameplaySetupViewController = GameplaySetupViewController ?? rootGameObject.GetComponentInChildren<GameplaySetupViewController>();
+                PracticeViewController = PracticeViewController ?? rootGameObject.GetComponentInChildren<PracticeViewController>();
+                ResultsViewController = ResultsViewController ?? rootGameObject.GetComponentInChildren<ResultsViewController>();
+                MainFlowCoordinator = MainFlowCoordinator ?? rootGameObject.GetComponentInChildren<MainFlowCoordinator>();
+            }
+        }
     }
 }

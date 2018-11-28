@@ -28,6 +28,13 @@ namespace TwitchIntegrationPlugin
             LogManager.Configuration = nLogConfig;
             
             _bot = new BeatBotNew();
+            SceneManager.sceneLoaded += HandleSceneManagerOnSceneLoaded;
+        }
+
+        private void HandleSceneManagerOnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name != "Menu") return;
+            TwitchIntegrationUi.OnLoad();
         }
 
         public void OnApplicationQuit()
@@ -40,10 +47,8 @@ namespace TwitchIntegrationPlugin
 
         public void OnLevelWasLoaded(int level)
         {
-            if (SceneManager.GetActiveScene().name != "Menu") return;
-
-            TwitchIntegrationUi.OnLoad();
-            LevelRequestFlowCoordinator.OnLoad(SceneManager.GetActiveScene().name);
+            //TwitchIntegrationUi.OnLoad();
+            //LevelRequestFlowCoordinator.OnLoad(SceneManager.GetActiveScene().name);
         }
 
         public void OnLevelWasInitialized(int level)

@@ -198,7 +198,7 @@ namespace TwitchIntegrationPlugin.UI
                 _ui.SetButtonText(ref _downloadButton, "Download");
 
             _queuedSong = new QueuedSong();
-            FindObjectOfType<LevelRequestFlowCoordinator>().CheckQueueAndUpdate(); //This kinda goes against the purpose of a flow controller, but I just want it to work.
+            FindObjectOfType<LevelRequestFlowCoordinatorNew>().CheckQueueAndUpdate(); //This kinda goes against the purpose of a flow controller, but I just want it to work.
         }
 
         public void SetDownloadButtonText(string text)
